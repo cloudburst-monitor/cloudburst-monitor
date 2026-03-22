@@ -1,33 +1,38 @@
 from flask import Flask, jsonify, send_from_directory
 import random
-import os
 
 app = Flask(__name__)
 
-# 🔹 Dummy sensor data (since Arduino not connected on cloud)
-def get_sensor_data():
-    rainfall = random.randint(0, 100)
-    rain_percent = rainfall
-    return rainfall, rain_percent
+# 🔹 GLOBAL VALUE (smooth changes ke liye)
+last_value = 20
 
-# 🔹 Prediction logic
+# 🔹 SENSOR FUNCTION (stable)
+def get_sensor_data():
+    global last_value
+    
+    change = random.randint(-2, 2)  # small variation
+    last_value = max(0, min(100, last_value + change))
+    
+    return last_value, last_value
+
+# 🔹 RISK PREDICTION (stable logic)
 def predict_risk(rain_percent):
     if rain_percent > 80:
         return "HIGH", 95
-    elif rain_percent > 50:
+    elif rain_percent > 60:
         return "MEDIUM", 70
     else:
-        return "LOW", 40
+        return "LOW", 30
 
-# 🔹 Route for dashboard
+# 🔹 ROUTES
 @app.route("/")
 def home():
     return send_from_directory(".", "dashboard.html")
 
-# 🔹 API route
 @app.route("/data")
 def data():
     rainfall, rain_percent = get_sensor_data()
+    
     risk, score = predict_risk(rain_percent)
 
     return jsonify({
@@ -36,6 +41,7 @@ def data():
         "risk": risk
     })
 
-# 🔥 IMPORTANT: Render compatible run
+# 🔹 MAIN RUN
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+    print("🚀 Server starting...")
+    app.run(host="0.0.0.0", port=10000)
