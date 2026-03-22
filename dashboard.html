@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Cloudburst Monitoring System</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body {
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background: #0b1a2a;
+    color: white;
+}
+
+.header {
+    text-align: center;
+    padding: 15px;
+    font-size: 22px;
+    font-weight: bold;
+    background: #0f2a44;
+}
+
+.alert-bar {
+    display: none;
+    background: #b30000;
+    text-align: center;
+    padding: 10px;
+    font-weight: bold;
+}
+
+#map {
+    height: 350px;
+    width: 95%;
+    margin: 10px auto;
+    border-radius: 10px;
+}
+
+.location {
+    text-align: center;
+    color: #aaa;
+}
+
+.cards {
+    display: flex;
+    justify-content: space-around;
+    margin: 20px;
+}
+
+.card {
+    background: #112b45;
+    padding: 15px;
+    border-radius: 10px;
+    width: 22%;
+    text-align: center;
+}
+
+.normal { color: #00ff88; }
+.risk { color: orange; }
+.high { color: red; }
+
+.alerts {
+    margin: 20px;
+}
+
+.alert-item {
+    background: #132f4c;
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">☁ Cloudburst Monitoring System</div>
+<div class="alert-bar" id="alertBar">⚠ HIGH RISK ALERT ⚠</div>
+
+<div id="map"></div>
+<div class="location" id="locationText">Detecting location...</div>
+
+<div class="cards">
+    <div class="card">Rainfall <p id="rain">0</p></div>
+    <div class="card">AI Risk % <p id="risk">0%</p></div>
+    <div class="card">Status <p id="status">Normal</p></div>
+    <div class="card">Time <p id="time">--</p></div>
+</div>
+
+<div style="width:90%; margin:auto;">
+    <canvas id="rainChart"></canvas>
+</div>
+
+<div class="alerts">
+    <h3>⚠ Active Node Alerts</h3>
+    <div id="alertList"></div>
+</div>
+
+<script>
+
+// ===== MAP =====
+let map = L.map('map').setView([30.7333, 76.7794], 13);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+// icons
+const greenIcon = new L.Icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/green-dot.png',iconSize:[32,32]});
+const orangeIcon = new L.Icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/orange-dot.png',iconSize:[32,32]});
+const redIcon = new L.Icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/red-dot.png',iconSize:[32,32]});
+
+// user marker
+let userMarker = L.marker([30.7333, 76.7794]).addTo(map);
+
+// location
+navigator.geolocation.getCurrentPosition(async (pos)=>{
+    let lat = pos.coords.latitude;
+    let lon = pos.coords.longitude;
+
+    map.setView([lat, lon], 13);
+    userMarker.setLatLng([lat, lon]);
+
+    let res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`);
+    let data = await res.json();
+
+    document.getElementById("locationText").innerText = data.display_name;
+});
+
+// nodes
+let nodes = [
+    { name:"Sector 117", lat:30.728, lon:76.780, risk:"Risk" },
+    { name:"Sector 118", lat:30.730, lon:76.785, risk:"High Risk" },
+    { name:"Sector 119", lat:30.735, lon:76.770, risk:"Normal" }
+];
+
+let nodeMarkers = [];
+let riskCircles = [];
+
+function updateNodeMarkers(){
+    nodeMarkers.forEach(m=>map.removeLayer(m));
+    nodeMarkers=[];
+
+    nodes.forEach(n=>{
+        let icon = n.risk==="High Risk"?redIcon:n.risk==="Risk"?orangeIcon:greenIcon;
+        let marker=L.marker([n.lat,n.lon],{icon}).addTo(map)
+            .bindPopup(`${n.name} - ${n.risk}`);
+        nodeMarkers.push(marker);
+    });
+}
+
+function updateRiskZones(){
+    riskCircles.forEach(c=>map.removeLayer(c));
+    riskCircles=[];
+
+    nodes.forEach(n=>{
+        let color = n.risk==="High Risk"?"red":n.risk==="Risk"?"orange":"green";
+
+        let circle=L.circle([n.lat,n.lon],{
+            radius:400,   // 🔥 FIXED (visible)
+            color:color,
+            fillColor:color,
+            fillOpacity:0.6
+        }).addTo(map);
+
+        riskCircles.push(circle);
+    });
+}
+
+updateNodeMarkers();
+updateRiskZones();
+
+
+// ===== FETCH =====
+setInterval(async()=>{
+    let res=await fetch("/data");
+    let data=await res.json();
+
+    document.getElementById("rain").innerText=data.rainfall;
+
+    let riskPercent=Math.round(data.score);
+    document.getElementById("risk").innerText=riskPercent+"%";
+
+    let status=document.getElementById("status");
+
+    if(riskPercent>70){
+        status.innerText="High Risk";
+        status.className="high";
+        document.getElementById("alertBar").style.display="block";
+    }
+    else if(riskPercent>40){
+        status.innerText="Risk";
+        status.className="risk";
+        document.getElementById("alertBar").style.display="none";
+    }
+    else{
+        status.innerText="Normal";
+        status.className="normal";
+        document.getElementById("alertBar").style.display="none";
+    }
+
+    document.getElementById("time").innerText=new Date().toLocaleTimeString();
+
+},500);
+
+
+// ===== GRAPH =====
+let rainData=[];
+let labels=[];
+
+const ctx=document.getElementById("rainChart").getContext("2d");
+
+const rainChart=new Chart(ctx,{
+    type:"line",
+    data:{
+        labels:labels,
+        datasets:[{
+            label:"Rainfall Trend",
+            data:rainData,
+            borderColor:"cyan",
+            tension:0.3
+        }]
+    }
+});
+
+setInterval(async()=>{
+    let res=await fetch("/data");
+    let data=await res.json();
+
+    rainData.push(data.rainfall);
+    labels.push(new Date().toLocaleTimeString());
+
+    if(rainData.length>10){
+        rainData.shift();
+        labels.shift();
+    }
+
+    // 🔥 FIXED GRAPH UPDATE
+    rainChart.data.labels=labels;
+    rainChart.data.datasets[0].data=rainData;
+    rainChart.update();
+
+},1000);
+
+
+// ===== ALERTS =====
+setInterval(()=>{
+    let html="";
+    nodes.forEach(n=>{
+        html+=`
+        <div class="alert-item">
+            <span>📍 ${n.name}</span>
+            <span>${n.risk}</span>
+            <span>${new Date().toLocaleTimeString()}</span>
+        </div>`;
+    });
+    document.getElementById("alertList").innerHTML=html;
+},2000);
+
+</script>
+
+</body>
+</html>
