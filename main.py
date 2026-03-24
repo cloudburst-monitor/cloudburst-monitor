@@ -79,32 +79,25 @@ def predict_risk(rain_percent):
         return "High Risk", 95
 
 
-# 🌐 HOME (UNCHANGED)
+# 🌐 HOME ROUTE (UNCHANGED)
 @app.route("/")
 def home():
     return send_from_directory(".", "dashboard.html")
 
 
-# 🔥 FIXED ROUTE (POST + GET BOTH)
+# 🔥 ONLY FIX: POST + GET enable
 @app.route("/data", methods=["GET", "POST"])
 def data():
     global last_rain_value
 
-    # ✅ ESP32 se data receive
+    # ESP32 POST
     if request.method == "POST":
-        try:
-            incoming = request.get_json()
-            value = int(incoming.get("rainfall", 0))
+        data = request.get_json()
+        last_rain_value = data.get("rainfall", 0)
+        print("📥 Received:", last_rain_value)
+        return jsonify({"status": "received"})
 
-            last_rain_value = value   # 🔥 STORE DIRECT VALUE
-            print("🔥 RECEIVED:", last_rain_value)
-
-            return jsonify({"status": "received"})
-        except Exception as e:
-            print("POST Error:", e)
-            return jsonify({"status": "error"})
-
-    # ✅ Dashboard ke liye
+    # Dashboard GET
     rainfall = last_rain_value
     rain_percent = (rainfall / 4095) * 100
 
