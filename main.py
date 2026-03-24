@@ -1,17 +1,9 @@
 from flask import Flask, jsonify, send_from_directory, request
-import serial
 import time
 
 app = Flask(__name__)
 
-# 🔌 ESP32 connect
-try:
-    arduino = serial.Serial('COM6', 115200, timeout=1)
-    time.sleep(2)
-    print("✅ ESP32 Connected")
-except Exception as e:
-    arduino = None
-    print("❌ ESP32 NOT connected:", e)
+
 
 # 🔥 STATE VARIABLES
 last_rain_value = 0
