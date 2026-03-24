@@ -1,38 +1,113 @@
-from flask import Flask, jsonify, send_from_directory
-import random
+from flask import Flask, jsonify, send_from_directory, request
+import serial
+import time
 
 app = Flask(__name__)
 
-# 🔹 GLOBAL VALUE (smooth changes ke liye)
-last_value = 20
+# 🔌 ESP32 connect
+try:
+    arduino = serial.Serial('COM6', 115200, timeout=1)
+    time.sleep(2)
+    print("✅ ESP32 Connected")
+except Exception as e:
+    arduino = None
+    print("❌ ESP32 NOT connected:", e)
 
-# 🔹 SENSOR FUNCTION (stable)
+# 🔥 STATE VARIABLES
+last_rain_value = 0
+last_update_time = 0
+
+
+# 📊 SENSOR READ (UNCHANGED)
 def get_sensor_data():
-    global last_value
-    
-    change = random.randint(-2, 2)  # small variation
-    last_value = max(0, min(100, last_value + change))
-    
-    return last_value, last_value
+    global last_rain_value, last_update_time
 
-# 🔹 RISK PREDICTION (stable logic)
+    if arduino:
+        try:
+            readings = []
+
+            while arduino.in_waiting:
+                value = arduino.readline().decode(errors='ignore').strip()
+                if value.isdigit():
+                    readings = [int(value)]
+
+            if readings:
+                rain_raw = readings[-1]
+
+                rainfall = 4095 - rain_raw
+
+                current_time = time.time()
+
+                if rainfall > last_rain_value + 20 and rainfall < 3800:
+
+                    confirm = arduino.readline().decode(errors='ignore').strip()
+
+                    if confirm.isdigit():
+                        confirm_val = 4095 - int(confirm)
+
+                        if confirm_val > last_rain_value + 20:
+                            last_rain_value = rainfall
+                            last_update_time = current_time
+
+                elif current_time - last_update_time < 12 and rainfall > 100:
+                    rainfall = last_rain_value
+
+                else:
+                    last_rain_value = max(rainfall, last_rain_value * 0.9)
+                    rainfall = last_rain_value
+
+                rain_percent = (rainfall / 4095) * 100
+
+                return rainfall, rain_percent
+
+        except Exception as e:
+            print("Sensor Error:", e)
+
+    return last_rain_value, (last_rain_value / 4095) * 100
+
+
+# 🤖 AI LOGIC (UNCHANGED)
 def predict_risk(rain_percent):
-    if rain_percent > 80:
-        return "HIGH", 95
-    elif rain_percent > 60:
-        return "MEDIUM", 70
-    else:
-        return "LOW", 30
 
-# 🔹 ROUTES
+    if rain_percent < 20:
+        return "Normal", 10
+    elif rain_percent < 50:
+        return "Risk", 40
+    elif rain_percent < 80:
+        return "Risk", 70
+    else:
+        return "High Risk", 95
+
+
+# 🌐 HOME (UNCHANGED)
 @app.route("/")
 def home():
     return send_from_directory(".", "dashboard.html")
 
-@app.route("/data")
+
+# 🔥 FIXED ROUTE (POST + GET BOTH)
+@app.route("/data", methods=["GET", "POST"])
 def data():
-    rainfall, rain_percent = get_sensor_data()
-    
+    global last_rain_value
+
+    # ✅ ESP32 se data receive
+    if request.method == "POST":
+        try:
+            incoming = request.get_json()
+            value = int(incoming.get("rainfall", 0))
+
+            last_rain_value = value   # 🔥 STORE DIRECT VALUE
+            print("🔥 RECEIVED:", last_rain_value)
+
+            return jsonify({"status": "received"})
+        except Exception as e:
+            print("POST Error:", e)
+            return jsonify({"status": "error"})
+
+    # ✅ Dashboard ke liye
+    rainfall = last_rain_value
+    rain_percent = (rainfall / 4095) * 100
+
     risk, score = predict_risk(rain_percent)
 
     return jsonify({
@@ -41,7 +116,6 @@ def data():
         "risk": risk
     })
 
-# 🔹 MAIN RUN
+
 if __name__ == "__main__":
-    print("🚀 Server starting...")
-    app.run(host="0.0.0.0", port=10000)
+    app.run(debug=False)
