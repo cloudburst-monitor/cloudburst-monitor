@@ -85,21 +85,31 @@ def home():
     return send_from_directory(".", "dashboard.html")
 
 
-# 🔥 ONLY FIX: POST + GET enable
+# 🔥 FIXED ROUTE (ONLY CHANGE = methods)
 @app.route("/data", methods=["GET", "POST"])
 def data():
     global last_rain_value
 
-    # ESP32 POST
+    # 🔹 POST (ESP32 / WiFi)
     if request.method == "POST":
-        data = request.get_json()
-        last_rain_value = data.get("rainfall", 0)
-        print("📥 Received:", last_rain_value)
-        return jsonify({"status": "received"})
+        try:
+            data = request.get_json()
 
-    # Dashboard GET
-    rainfall = last_rain_value
-    rain_percent = (rainfall / 4095) * 100
+            # अगर JSON नहीं आया तो fallback
+            if not data:
+                return jsonify({"status": "no data"}), 400
+
+            last_rain_value = int(data.get("rainfall", 0))
+            print("📥 Received:", last_rain_value)
+
+            return jsonify({"status": "received"}), 200
+
+        except Exception as e:
+            print("POST Error:", e)
+            return jsonify({"status": "error"}), 500
+
+    # 🔹 GET (Dashboard / Serial fallback)
+    rainfall, rain_percent = get_sensor_data()
 
     risk, score = predict_risk(rain_percent)
 
@@ -110,5 +120,6 @@ def data():
     })
 
 
+# 🚀 RUN
 if __name__ == "__main__":
     app.run(debug=False)
