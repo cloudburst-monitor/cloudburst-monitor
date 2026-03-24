@@ -3,59 +3,29 @@ import time
 
 app = Flask(__name__)
 
-
-
 # 🔥 STATE VARIABLES
 last_rain_value = 0
 last_update_time = 0
 
 
-# 📊 SENSOR READ (UNCHANGED)
+# 📊 SENSOR LOGIC (same structure, serial हटाया)
 def get_sensor_data():
     global last_rain_value, last_update_time
 
-    if arduino:
-        try:
-            readings = []
+    current_time = time.time()
 
-            while arduino.in_waiting:
-                value = arduino.readline().decode(errors='ignore').strip()
-                if value.isdigit():
-                    readings = [int(value)]
+    # fallback smoothing logic (same idea)
+    rainfall = last_rain_value
 
-            if readings:
-                rain_raw = readings[-1]
+    if current_time - last_update_time < 12 and rainfall > 100:
+        rainfall = last_rain_value
+    else:
+        last_rain_value = max(rainfall, last_rain_value * 0.9)
+        rainfall = last_rain_value
 
-                rainfall = 4095 - rain_raw
+    rain_percent = (rainfall / 4095) * 100
 
-                current_time = time.time()
-
-                if rainfall > last_rain_value + 20 and rainfall < 3800:
-
-                    confirm = arduino.readline().decode(errors='ignore').strip()
-
-                    if confirm.isdigit():
-                        confirm_val = 4095 - int(confirm)
-
-                        if confirm_val > last_rain_value + 20:
-                            last_rain_value = rainfall
-                            last_update_time = current_time
-
-                elif current_time - last_update_time < 12 and rainfall > 100:
-                    rainfall = last_rain_value
-
-                else:
-                    last_rain_value = max(rainfall, last_rain_value * 0.9)
-                    rainfall = last_rain_value
-
-                rain_percent = (rainfall / 4095) * 100
-
-                return rainfall, rain_percent
-
-        except Exception as e:
-            print("Sensor Error:", e)
-
-    return last_rain_value, (last_rain_value / 4095) * 100
+    return rainfall, rain_percent
 
 
 # 🤖 AI LOGIC (UNCHANGED)
@@ -71,27 +41,28 @@ def predict_risk(rain_percent):
         return "High Risk", 95
 
 
-# 🌐 HOME ROUTE (UNCHANGED)
+# 🌐 HOME
 @app.route("/")
 def home():
     return send_from_directory(".", "dashboard.html")
 
 
-# 🔥 FIXED ROUTE (ONLY CHANGE = methods)
+# 🔥 MAIN ROUTE (GET + POST)
 @app.route("/data", methods=["GET", "POST"])
 def data():
-    global last_rain_value
+    global last_rain_value, last_update_time
 
-    # 🔹 POST (ESP32 / WiFi)
+    # 🟢 ESP32 → POST
     if request.method == "POST":
         try:
             data = request.get_json()
 
-            # अगर JSON नहीं आया तो fallback
             if not data:
                 return jsonify({"status": "no data"}), 400
 
             last_rain_value = int(data.get("rainfall", 0))
+            last_update_time = time.time()
+
             print("📥 Received:", last_rain_value)
 
             return jsonify({"status": "received"}), 200
@@ -100,9 +71,8 @@ def data():
             print("POST Error:", e)
             return jsonify({"status": "error"}), 500
 
-    # 🔹 GET (Dashboard / Serial fallback)
+    # 🔵 Dashboard → GET
     rainfall, rain_percent = get_sensor_data()
-
     risk, score = predict_risk(rain_percent)
 
     return jsonify({
@@ -112,7 +82,7 @@ def data():
     })
 
 
-# 🚀 RUN
+# 🚀 RUN (Render compatible)
 if __name__ == "__main__":
-import os
-app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
+    import os
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
