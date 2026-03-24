@@ -20,7 +20,6 @@ def get_sensor_data():
     if current_time - last_update_time < 12 and rainfall > 100:
         rainfall = last_rain_value
     else:
-        last_rain_value = (last_rain_value * 0.7) + (rainfall * 0.3)
         rainfall = last_rain_value
 
     rain_percent = (rainfall / 4095) * 100
