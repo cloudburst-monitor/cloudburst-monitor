@@ -1,3 +1,8 @@
 Flask
-gunicorn
+flask-cors
 pyserial
+numpy
+pandas
+scikit-learn
+joblib
+gunicorn
