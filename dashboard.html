@@ -75,18 +75,6 @@ body {
     display: flex;
     justify-content: space-between;
 }
-
-.sample-btn {
-    display: block;
-    margin: 10px auto;
-    padding: 10px 20px;
-    background: linear-gradient(135deg,#ff6b6b,#ff3b3b);
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-weight: bold;
-    cursor: pointer;
-}
 </style>
 
 </head>
@@ -105,8 +93,6 @@ body {
     <div class="card">Status <p id="status">Normal</p></div>
     <div class="card">Time <p id="time">--</p></div>
 </div>
-
-<button class="sample-btn" onclick="sendSampleData()">✨ Try Sample Input</button>
 
 <div style="width:90%; margin:auto;">
     <canvas id="rainChart"></canvas>
@@ -143,13 +129,56 @@ navigator.geolocation.getCurrentPosition(async (pos)=>{
     document.getElementById("locationText").innerText = data.display_name;
 });
 
+// ===== NODES =====
+let nodes = [
+    { name:"Sector 117", lat:30.728, lon:76.780, risk:"Risk" },
+    { name:"Sector 118", lat:30.730, lon:76.785, risk:"High Risk" },
+    { name:"Sector 119", lat:30.735, lon:76.770, risk:"Normal" }
+];
+
+let nodeMarkers = [];
+let riskCircles = [];
+
+function updateNodeMarkers(){
+    nodeMarkers.forEach(m=>map.removeLayer(m));
+    nodeMarkers=[];
+
+    nodes.forEach(n=>{
+        let icon = n.risk==="High Risk"?redIcon:n.risk==="Risk"?orangeIcon:greenIcon;
+        let marker=L.marker([n.lat,n.lon],{icon}).addTo(map)
+            .bindPopup(`${n.name} - ${n.risk}`);
+        nodeMarkers.push(marker);
+    });
+}
+
+function updateRiskZones(){
+    riskCircles.forEach(c=>map.removeLayer(c));
+    riskCircles=[];
+
+    nodes.forEach(n=>{
+        let color = n.risk==="High Risk"?"red":n.risk==="Risk"?"orange":"green";
+
+        let circle=L.circle([n.lat,n.lon],{
+            radius:400,
+            color:color,
+            fillColor:color,
+            fillOpacity:0.6
+        }).addTo(map);
+
+        riskCircles.push(circle);
+    });
+}
+
+updateNodeMarkers();
+updateRiskZones();
+
 // ===== GRAPH INIT =====
-let rainData = [];
-let labels = [];
+let rainData=[];
+let labels=[];
 
-const ctx = document.getElementById("rainChart").getContext("2d");
+const ctx=document.getElementById("rainChart").getContext("2d");
 
-const rainChart = new Chart(ctx,{
+const rainChart=new Chart(ctx,{
     type:"line",
     data:{
         labels:labels,
@@ -164,24 +193,25 @@ const rainChart = new Chart(ctx,{
     }
 });
 
-// ===== SINGLE FETCH LOOP =====
+// ===== SINGLE API LOOP (FIXED) =====
 setInterval(async()=>{
-    let res = await fetch("/data");
-    let data = await res.json();
+    let res=await fetch("/data");
+    let data=await res.json();
 
-    document.getElementById("rain").innerText = data.rainfall;
+    // cards
+    document.getElementById("rain").innerText=data.rainfall;
 
-    let riskPercent = Math.round(data.score);
-    document.getElementById("risk").innerText = riskPercent + "%";
+    let riskPercent=Math.round(data.score);
+    document.getElementById("risk").innerText=riskPercent+"%";
 
-    let status = document.getElementById("status");
+    let status=document.getElementById("status");
 
-    if(riskPercent > 70){
+    if(riskPercent>70){
         status.innerText="High Risk";
         status.className="high";
         document.getElementById("alertBar").style.display="block";
     }
-    else if(riskPercent > 40){
+    else if(riskPercent>40){
         status.innerText="Risk";
         status.className="risk";
         document.getElementById("alertBar").style.display="none";
@@ -192,18 +222,19 @@ setInterval(async()=>{
         document.getElementById("alertBar").style.display="none";
     }
 
-    document.getElementById("time").innerText = new Date().toLocaleTimeString();
+    document.getElementById("time").innerText=new Date().toLocaleTimeString();
 
+    // graph same data
     rainData.push(data.rainfall);
     labels.push(new Date().toLocaleTimeString());
 
-    if(rainData.length > 10){
+    if(rainData.length>10){
         rainData.shift();
         labels.shift();
     }
 
-    rainChart.data.labels = labels;
-    rainChart.data.datasets[0].data = rainData;
+    rainChart.data.labels=labels;
+    rainChart.data.datasets[0].data=rainData;
     rainChart.update();
 
 },1000);
@@ -211,12 +242,6 @@ setInterval(async()=>{
 // ===== ALERTS =====
 setInterval(()=>{
     let html="";
-    let nodes=[
-        { name:"Sector 117", risk:"Risk" },
-        { name:"Sector 118", risk:"High Risk" },
-        { name:"Sector 119", risk:"Normal" }
-    ];
-
     nodes.forEach(n=>{
         html+=`
         <div class="alert-item">
@@ -225,36 +250,8 @@ setInterval(()=>{
             <span>${new Date().toLocaleTimeString()}</span>
         </div>`;
     });
-
     document.getElementById("alertList").innerHTML=html;
-
 },2000);
-
-// ===== SAMPLE INPUT (FIXED)
-function sendSampleData() {
-
-    let values = [300, 1500, 3500];
-    let value = values[Math.floor(Math.random()*values.length)];
-
-    fetch("/data", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-            rainfall: value
-        })
-    }).then(async ()=>{
-        // 🔥 NO PAGE RELOAD
-        let res = await fetch("/data");
-        let data = await res.json();
-
-        document.getElementById("rain").innerText = data.rainfall;
-
-        let riskPercent = Math.round(data.score);
-        document.getElementById("risk").innerText = riskPercent + "%";
-    });
-}
 
 </script>
 
