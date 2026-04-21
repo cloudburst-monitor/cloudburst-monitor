@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -74,7 +75,20 @@ body {
     display: flex;
     justify-content: space-between;
 }
+
+.sample-btn {
+    display: block;
+    margin: 10px auto;
+    padding: 10px 20px;
+    background: linear-gradient(135deg,#ff6b6b,#ff3b3b);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+}
 </style>
+
 </head>
 
 <body>
@@ -92,6 +106,8 @@ body {
     <div class="card">Time <p id="time">--</p></div>
 </div>
 
+<button class="sample-btn" onclick="sendSampleData()">✨ Try Sample Input</button>
+
 <div style="width:90%; margin:auto;">
     <canvas id="rainChart"></canvas>
 </div>
@@ -108,15 +124,12 @@ let map = L.map('map').setView([30.7333, 76.7794], 13);
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-// icons
 const greenIcon = new L.Icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/green-dot.png',iconSize:[32,32]});
 const orangeIcon = new L.Icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/orange-dot.png',iconSize:[32,32]});
 const redIcon = new L.Icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/red-dot.png',iconSize:[32,32]});
 
-// user marker
 let userMarker = L.marker([30.7333, 76.7794]).addTo(map);
 
-// location
 navigator.geolocation.getCurrentPosition(async (pos)=>{
     let lat = pos.coords.latitude;
     let lon = pos.coords.longitude;
@@ -130,68 +143,45 @@ navigator.geolocation.getCurrentPosition(async (pos)=>{
     document.getElementById("locationText").innerText = data.display_name;
 });
 
-// nodes
-let nodes = [
-    { name:"Sector 117", lat:30.728, lon:76.780, risk:"Risk" },
-    { name:"Sector 118", lat:30.730, lon:76.785, risk:"High Risk" },
-    { name:"Sector 119", lat:30.735, lon:76.770, risk:"Normal" }
-];
+// ===== GRAPH INIT =====
+let rainData = [];
+let labels = [];
 
-let nodeMarkers = [];
-let riskCircles = [];
+const ctx = document.getElementById("rainChart").getContext("2d");
 
-function updateNodeMarkers(){
-    nodeMarkers.forEach(m=>map.removeLayer(m));
-    nodeMarkers=[];
+const rainChart = new Chart(ctx,{
+    type:"line",
+    data:{
+        labels:labels,
+        datasets:[{
+            label:"Rainfall Trend",
+            data:rainData,
+            borderColor:"cyan",
+            backgroundColor:"rgba(0,255,255,0.1)",
+            fill:true,
+            tension:0.4
+        }]
+    }
+});
 
-    nodes.forEach(n=>{
-        let icon = n.risk==="High Risk"?redIcon:n.risk==="Risk"?orangeIcon:greenIcon;
-        let marker=L.marker([n.lat,n.lon],{icon}).addTo(map)
-            .bindPopup(`${n.name} - ${n.risk}`);
-        nodeMarkers.push(marker);
-    });
-}
-
-function updateRiskZones(){
-    riskCircles.forEach(c=>map.removeLayer(c));
-    riskCircles=[];
-
-    nodes.forEach(n=>{
-        let color = n.risk==="High Risk"?"red":n.risk==="Risk"?"orange":"green";
-
-        let circle=L.circle([n.lat,n.lon],{
-            radius:400,   // 🔥 FIXED (visible)
-            color:color,
-            fillColor:color,
-            fillOpacity:0.6
-        }).addTo(map);
-
-        riskCircles.push(circle);
-    });
-}
-
-updateNodeMarkers();
-updateRiskZones();
-
-
-// ===== FETCH =====
+// ===== SINGLE FETCH LOOP =====
 setInterval(async()=>{
-    let res=await fetch("/data");
-    let data=await res.json();
+    let res = await fetch("/data");
+    let data = await res.json();
 
-    document.getElementById("rain").innerText=data.rainfall;
+    document.getElementById("rain").innerText = data.rainfall;
 
-    let riskPercent=Math.round(data.score);
-    document.getElementById("risk").innerText=riskPercent+"%";
+    let riskPercent = Math.round(data.score);
+    document.getElementById("risk").innerText = riskPercent + "%";
 
-    let status=document.getElementById("status");
+    let status = document.getElementById("status");
 
-    if(riskPercent>70){
+    if(riskPercent > 70){
         status.innerText="High Risk";
         status.className="high";
         document.getElementById("alertBar").style.display="block";
     }
-    else if(riskPercent>40){
+    else if(riskPercent > 40){
         status.innerText="Risk";
         status.className="risk";
         document.getElementById("alertBar").style.display="none";
@@ -202,53 +192,31 @@ setInterval(async()=>{
         document.getElementById("alertBar").style.display="none";
     }
 
-    document.getElementById("time").innerText=new Date().toLocaleTimeString();
-
-},500);
-
-
-// ===== GRAPH =====
-let rainData=[];
-let labels=[];
-
-const ctx=document.getElementById("rainChart").getContext("2d");
-
-const rainChart=new Chart(ctx,{
-    type:"line",
-    data:{
-        labels:labels,
-        datasets:[{
-            label:"Rainfall Trend",
-            data:rainData,
-            borderColor:"cyan",
-            tension:0.3
-        }]
-    }
-});
-
-setInterval(async()=>{
-    let res=await fetch("/data");
-    let data=await res.json();
+    document.getElementById("time").innerText = new Date().toLocaleTimeString();
 
     rainData.push(data.rainfall);
     labels.push(new Date().toLocaleTimeString());
 
-    if(rainData.length>10){
+    if(rainData.length > 10){
         rainData.shift();
         labels.shift();
     }
 
-    // 🔥 FIXED GRAPH UPDATE
-    rainChart.data.labels=labels;
-    rainChart.data.datasets[0].data=rainData;
+    rainChart.data.labels = labels;
+    rainChart.data.datasets[0].data = rainData;
     rainChart.update();
 
 },1000);
 
-
 // ===== ALERTS =====
 setInterval(()=>{
     let html="";
+    let nodes=[
+        { name:"Sector 117", risk:"Risk" },
+        { name:"Sector 118", risk:"High Risk" },
+        { name:"Sector 119", risk:"Normal" }
+    ];
+
     nodes.forEach(n=>{
         html+=`
         <div class="alert-item">
@@ -257,29 +225,57 @@ setInterval(()=>{
             <span>${new Date().toLocaleTimeString()}</span>
         </div>`;
     });
+
     document.getElementById("alertList").innerHTML=html;
+
 },2000);
 
+// ===== SAMPLE INPUT (FIXED)
+function sendSampleData() {
+
+    let values = [300, 1500, 3500];
+    let value = values[Math.floor(Math.random()*values.length)];
+
+    fetch("/data", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            rainfall: value
+        })
+    }).then(async ()=>{
+        // 🔥 NO PAGE RELOAD
+        let res = await fetch("/data");
+        let data = await res.json();
+
+        document.getElementById("rain").innerText = data.rainfall;
+
+        let riskPercent = Math.round(data.score);
+        document.getElementById("risk").innerText = riskPercent + "%";
+    });
+}
+
 </script>
-<!-- 🔥 FEEDBACK BUTTON (NO CHANGE TO EXISTING CODE) -->
+
 <a href="https://docs.google.com/forms/d/e/1FAIpQLSf31qzXdg2mxO-cGNvC_d2wldAuop52aPA8zcCFrWSnKpGWbQ/viewform?usp=sharing" target="_blank">
-    <button style="
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        padding: 12px 18px;
-        background: linear-gradient(135deg, #00d4ff, #007bff);
-        color: white;
-        border: none;
-        border-radius: 10px;
-        font-size: 15px;
-        font-weight: bold;
-        cursor: pointer;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        z-index: 999;">
-        
-        💬 Give Feedback
-    </button>
+<button style="
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 12px 18px;
+    background: linear-gradient(135deg, #00d4ff, #007bff);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    z-index: 999;">
+💬 Give Feedback
+</button>
 </a>
+
 </body>
 </html>
