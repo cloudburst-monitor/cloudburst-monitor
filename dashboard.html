@@ -1,97 +1,145 @@
 <!DOCTYPE html>
-
 <html lang="en">
+
 <head>
 <meta charset="UTF-8">
 <title>Cloudburst Monitoring System</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-body {
-    margin: 0;
-    font-family: 'Segoe UI', sans-serif;
-    background: #0b1a2a;
-    color: white;
+
+body{
+    margin:0;
+    font-family:'Segoe UI',sans-serif;
+    background:#0b1a2a;
+    color:white;
 }
 
-.header {
-    text-align: center;
-    padding: 15px;
-    font-size: 22px;
-    font-weight: bold;
-    background: #0f2a44;
+.header{
+    text-align:center;
+    padding:15px;
+    font-size:24px;
+    font-weight:bold;
+    background:#0f2a44;
 }
 
-.alert-bar {
-    display: none;
-    background: #b30000;
-    text-align: center;
-    padding: 10px;
-    font-weight: bold;
+.alert-bar{
+    display:none;
+    background:#b30000;
+    text-align:center;
+    padding:10px;
+    font-weight:bold;
 }
 
-#map {
-    height: 350px;
-    width: 95%;
-    margin: 10px auto;
-    border-radius: 10px;
+#map{
+    height:350px;
+    width:95%;
+    margin:10px auto;
+    border-radius:10px;
 }
 
-.location {
-    text-align: center;
-    color: #aaa;
+.location{
+    text-align:center;
+    color:#aaa;
 }
 
-.cards {
-    display: flex;
-    justify-content: space-around;
-    margin: 20px;
+.cards{
+    display:flex;
+    justify-content:space-around;
+    margin:20px;
+    flex-wrap:wrap;
 }
 
-.card {
-    background: #112b45;
-    padding: 15px;
-    border-radius: 10px;
-    width: 22%;
-    text-align: center;
+.card{
+    background:#112b45;
+    padding:15px;
+    border-radius:10px;
+    width:22%;
+    text-align:center;
+    min-width:180px;
+    margin:10px;
 }
 
-.normal { color: #00ff88; }
-.risk { color: orange; }
-.high { color: red; }
-
-.alerts {
-    margin: 20px;
+.card p{
+    font-size:24px;
+    font-weight:bold;
 }
 
-.alert-item {
-    background: #132f4c;
-    padding: 10px;
-    border-radius: 8px;
-    margin-bottom: 10px;
-    display: flex;
-    justify-content: space-between;
+.normal{
+    color:#00ff88;
 }
+
+.average{
+    color:yellow;
+}
+
+.risk{
+    color:orange;
+}
+
+.high{
+    color:red;
+}
+
+.alerts{
+    margin:20px;
+}
+
+.alert-item{
+    background:#132f4c;
+    padding:10px;
+    border-radius:8px;
+    margin-bottom:10px;
+    display:flex;
+    justify-content:space-between;
+}
+
 </style>
-
 </head>
 
 <body>
 
-<div class="header">☁ Cloudburst Monitoring System</div>
-<div class="alert-bar" id="alertBar">⚠ HIGH RISK ALERT ⚠</div>
+<div class="header">
+☁ Cloudburst Monitoring System
+</div>
+
+<div class="alert-bar" id="alertBar">
+⚠ HIGH RISK ALERT ⚠
+</div>
 
 <div id="map"></div>
-<div class="location" id="locationText">Detecting location...</div>
+
+<div class="location" id="locationText">
+Detecting location...
+</div>
 
 <div class="cards">
-    <div class="card">Rainfall <p id="rain">0</p></div>
-    <div class="card">AI Risk % <p id="risk">0%</p></div>
-    <div class="card">Status <p id="status">Normal</p></div>
-    <div class="card">Time <p id="time">--</p></div>
+
+    <div class="card">
+        Rainfall
+        <p id="rain">0</p>
+    </div>
+
+    <div class="card">
+        AI Risk %
+        <p id="risk">0%</p>
+    </div>
+
+    <div class="card">
+        Status
+        <p id="status">Normal</p>
+    </div>
+
+    <div class="card">
+        Time
+        <p id="time">--</p>
+    </div>
+
 </div>
 
 <div style="width:90%; margin:auto;">
@@ -99,180 +147,252 @@ body {
 </div>
 
 <div class="alerts">
+
     <h3>⚠ Active Node Alerts</h3>
+
     <div id="alertList"></div>
+
 </div>
 
 <script>
 
-// ===== MAP =====
-let map = L.map('map').setView([30.7333, 76.7794], 13);
+// MAP
+let map = L.map('map').setView([30.7333,76.7794],13);
 
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+L.tileLayer(
+'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+).addTo(map);
 
-const greenIcon = new L.Icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/green-dot.png',iconSize:[32,32]});
-const orangeIcon = new L.Icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/orange-dot.png',iconSize:[32,32]});
-const redIcon = new L.Icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/red-dot.png',iconSize:[32,32]});
+const greenIcon = new L.Icon({
+    iconUrl:'https://maps.google.com/mapfiles/ms/icons/green-dot.png',
+    iconSize:[32,32]
+});
 
-let userMarker = L.marker([30.7333, 76.7794]).addTo(map);
+const orangeIcon = new L.Icon({
+    iconUrl:'https://maps.google.com/mapfiles/ms/icons/orange-dot.png',
+    iconSize:[32,32]
+});
 
-navigator.geolocation.getCurrentPosition(async (pos)=>{
+const redIcon = new L.Icon({
+    iconUrl:'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
+    iconSize:[32,32]
+});
+
+let userMarker = L.marker([30.7333,76.7794]).addTo(map);
+
+navigator.geolocation.getCurrentPosition(async(pos)=>{
+
     let lat = pos.coords.latitude;
     let lon = pos.coords.longitude;
 
-    map.setView([lat, lon], 13);
-    userMarker.setLatLng([lat, lon]);
+    map.setView([lat,lon],13);
 
-    let res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`);
+    userMarker.setLatLng([lat,lon]);
+
+    let res = await fetch(
+    `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`
+    );
+
     let data = await res.json();
 
-    document.getElementById("locationText").innerText = data.display_name;
+    document.getElementById("locationText").innerText =
+    data.display_name;
+
 });
 
-// ===== NODES =====
+
+// NODES
 let nodes = [
-    { name:"Sector 117", lat:30.728, lon:76.780, risk:"Risk" },
-    { name:"Sector 118", lat:30.730, lon:76.785, risk:"High Risk" },
-    { name:"Sector 119", lat:30.735, lon:76.770, risk:"Normal" }
+
+{
+    name:"Sector 117",
+    lat:30.728,
+    lon:76.780,
+    risk:"Average"
+},
+
+{
+    name:"Sector 118",
+    lat:30.730,
+    lon:76.785,
+    risk:"Risk"
+},
+
+{
+    name:"Sector 119",
+    lat:30.735,
+    lon:76.770,
+    risk:"Normal"
+}
+
 ];
 
-let nodeMarkers = [];
-let riskCircles = [];
 
-function updateNodeMarkers(){
-    nodeMarkers.forEach(m=>map.removeLayer(m));
-    nodeMarkers=[];
+// GRAPH
+let rainData = [];
+let labels = [];
 
-    nodes.forEach(n=>{
-        let icon = n.risk==="High Risk"?redIcon:n.risk==="Risk"?orangeIcon:greenIcon;
-        let marker=L.marker([n.lat,n.lon],{icon}).addTo(map)
-            .bindPopup(`${n.name} - ${n.risk}`);
-        nodeMarkers.push(marker);
-    });
-}
+const ctx = document
+.getElementById("rainChart")
+.getContext("2d");
 
-function updateRiskZones(){
-    riskCircles.forEach(c=>map.removeLayer(c));
-    riskCircles=[];
+const rainChart = new Chart(ctx,{
 
-    nodes.forEach(n=>{
-        let color = n.risk==="High Risk"?"red":n.risk==="Risk"?"orange":"green";
-
-        let circle=L.circle([n.lat,n.lon],{
-            radius:400,
-            color:color,
-            fillColor:color,
-            fillOpacity:0.6
-        }).addTo(map);
-
-        riskCircles.push(circle);
-    });
-}
-
-updateNodeMarkers();
-updateRiskZones();
-
-// ===== GRAPH INIT =====
-let rainData=[];
-let labels=[];
-
-const ctx=document.getElementById("rainChart").getContext("2d");
-
-const rainChart=new Chart(ctx,{
     type:"line",
+
     data:{
         labels:labels,
+
         datasets:[{
+
             label:"Rainfall Trend",
+
             data:rainData,
+
             borderColor:"cyan",
+
             backgroundColor:"rgba(0,255,255,0.1)",
+
             fill:true,
+
             tension:0.4
+
         }]
     }
 });
 
-// ===== SINGLE API LOOP (FIXED) =====
-setInterval(async()=>{
-    let res=await fetch("/data");
-    let data=await res.json();
 
-    // cards
-    document.getElementById("rain").innerText=data.rainfall;
+// FETCH DATA
+async function fetchData(){
 
-    let riskPercent=Math.round(data.score);
-    document.getElementById("risk").innerText=riskPercent+"%";
+    try{
 
-    let status=document.getElementById("status");
+        const response = await fetch("/data");
 
-    if(riskPercent>70){
-        status.innerText="High Risk";
-        status.className="high";
-        document.getElementById("alertBar").style.display="block";
+        const data = await response.json();
+
+        console.log(data);
+
+        document.getElementById("rain").innerText =
+        data.rainfall;
+
+        let riskPercent = Math.round(data.score);
+
+        document.getElementById("risk").innerText =
+        riskPercent + "%";
+
+        let status =
+        document.getElementById("status");
+
+        // NORMAL
+        if(riskPercent <= 30){
+
+            status.innerText = "Normal";
+
+            status.className = "normal";
+
+            document.getElementById("alertBar")
+            .style.display = "none";
+        }
+
+        // AVERAGE
+        else if(riskPercent <= 50){
+
+            status.innerText = "Average";
+
+            status.className = "average";
+
+            document.getElementById("alertBar")
+            .style.display = "none";
+        }
+
+        // RISK
+        else if(riskPercent <= 80){
+
+            status.innerText = "Risk";
+
+            status.className = "risk";
+
+            document.getElementById("alertBar")
+            .style.display = "none";
+        }
+
+        // HIGH RISK
+        else{
+
+            status.innerText = "High Risk";
+
+            status.className = "high";
+
+            document.getElementById("alertBar")
+            .style.display = "block";
+        }
+
+        document.getElementById("time").innerText =
+        new Date().toLocaleTimeString();
+
+
+        // GRAPH UPDATE
+        rainData.push(data.rainfall);
+
+        labels.push(
+            new Date().toLocaleTimeString()
+        );
+
+        if(rainData.length > 10){
+
+            rainData.shift();
+
+            labels.shift();
+        }
+
+        rainChart.data.labels = labels;
+
+        rainChart.data.datasets[0].data =
+        rainData;
+
+        rainChart.update();
+
     }
-    else if(riskPercent>40){
-        status.innerText="Risk";
-        status.className="risk";
-        document.getElementById("alertBar").style.display="none";
+
+    catch(error){
+
+        console.log("Error:", error);
     }
-    else{
-        status.innerText="Normal";
-        status.className="normal";
-        document.getElementById("alertBar").style.display="none";
-    }
+}
 
-    document.getElementById("time").innerText=new Date().toLocaleTimeString();
+setInterval(fetchData,1000);
 
-    // graph same data
-    rainData.push(data.rainfall);
-    labels.push(new Date().toLocaleTimeString());
+fetchData();
 
-    if(rainData.length>10){
-        rainData.shift();
-        labels.shift();
-    }
 
-    rainChart.data.labels=labels;
-    rainChart.data.datasets[0].data=rainData;
-    rainChart.update();
-
-},1000);
-
-// ===== ALERTS =====
+// ALERTS
 setInterval(()=>{
+
     let html="";
+
     nodes.forEach(n=>{
-        html+=`
+
+        html += `
         <div class="alert-item">
+
             <span>📍 ${n.name}</span>
+
             <span>${n.risk}</span>
-            <span>${new Date().toLocaleTimeString()}</span>
+
+            <span>
+            ${new Date().toLocaleTimeString()}
+            </span>
+
         </div>`;
     });
-    document.getElementById("alertList").innerHTML=html;
+
+    document.getElementById("alertList")
+    .innerHTML = html;
+
 },2000);
 
 </script>
-
-<a href="https://docs.google.com/forms/d/e/1FAIpQLSf31qzXdg2mxO-cGNvC_d2wldAuop52aPA8zcCFrWSnKpGWbQ/viewform?usp=sharing" target="_blank">
-<button style="
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    padding: 12px 18px;
-    background: linear-gradient(135deg, #00d4ff, #007bff);
-    color: white;
-    border: none;
-    border-radius: 10px;
-    font-size: 15px;
-    font-weight: bold;
-    cursor: pointer;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    z-index: 999;">
-💬 Give Feedback
-</button>
-</a>
 
 </body>
 </html>
