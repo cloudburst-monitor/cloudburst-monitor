@@ -87,19 +87,15 @@ def get_sensor_data():
 # AI PREDICTION
 def predict_risk(rain_percent):
 
-    # 0 - 30
     if rain_percent <= 30:
         return "Normal", rain_percent
 
-    # 31 - 50
     elif rain_percent <= 50:
         return "Average", rain_percent
 
-    # 51 - 80
     elif rain_percent <= 80:
         return "Risk", rain_percent
 
-    # 81 - 100
     else:
         return "High Risk", min(100, rain_percent)
 
@@ -137,10 +133,8 @@ def data():
             "status": "received"
         })
 
-    # Dashboard GET
-    rainfall = last_rain_value
-
-    rain_percent = (rainfall / 4095) * 100
+    # DASHBOARD GET
+    rainfall, rain_percent = get_sensor_data()
 
     risk, score = predict_risk(rain_percent)
 
