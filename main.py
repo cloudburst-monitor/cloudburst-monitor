@@ -1,12 +1,12 @@
-from flask import Flask, jsonify, send_from_directory, request
+from flask import Flask, jsonify, send_from_directory
 import serial
+import threading
 import time
-import joblib
 import os
 
 app = Flask(__name__)
 
-# ESP32 connect
+# ESP32 CONNECT
 try:
     arduino = serial.Serial('COM6', 115200, timeout=1)
     time.sleep(2)
@@ -17,137 +17,116 @@ except Exception as e:
     print("ESP32 NOT connected:", e)
 
 
-# LOAD ML MODEL
-model = joblib.load("model.pkl")
-
-# STATE VARIABLES
+# GLOBAL VALUES
 last_rain_value = 0
-last_update_time = 0
+last_risk = "Normal"
+last_score = 0
 
 
-# SENSOR READ
-def get_sensor_data():
+# BACKGROUND SENSOR READER
+def sensor_loop():
 
-    global last_rain_value, last_update_time
+    global last_rain_value
+    global last_risk
+    global last_score
 
-    if arduino:
+    while True:
 
-        try:
-            readings = []
+        if arduino:
 
-            while arduino.in_waiting:
+            try:
 
-                value = arduino.readline().decode(errors='ignore').strip()
+                if arduino.in_waiting > 0:
 
-                if value.isdigit():
+                    value = arduino.readline().decode(
+                        errors='ignore'
+                    ).strip()
 
-                    # Ignore false zero readings
-                    if int(value) == 0:
-                        continue
+                    if value.isdigit():
 
-                    readings = [int(value)]
+                        rain_raw = int(value)
 
-            if readings:
+                        # SENSOR CALIBRATION
+                        rainfall = max(
+                            0,
+                            rain_raw * 0.03
+                        )
 
-                rain_raw = readings[-1]
+                        # Ignore tiny/noise readings
+                        if rainfall > 5:
 
-                # Safe rainfall calculation
-                rainfall = max(0, 4095 - rain_raw)
+                            # SMOOTH GRAPH VALUES
+                            last_rain_value = round(
+                                (last_rain_value * 0.2) +
+                                (rainfall * 0.8),
+                                2
+                            )
 
-                current_time = time.time()
+                            # PERCENTAGE SCALING
+                            rain_percent = min(
+                                100,
+                                (last_rain_value / 120) * 100
+                            )
 
-                if rainfall > last_rain_value + 20 and rainfall < 3800:
+                            last_score = round(
+                                rain_percent,
+                                2
+                            )
 
-                    confirm = arduino.readline().decode(errors='ignore').strip()
+                            # UPDATED RISK LOGIC
+                            if rain_percent <= 30:
 
-                    if confirm.isdigit():
+                                last_risk = "Normal"
 
-                        confirm_val = max(0, 4095 - int(confirm))
+                            elif rain_percent <= 70:
 
-                        if confirm_val > last_rain_value + 20:
+                                last_risk = "Average"
 
-                            last_rain_value = rainfall
-                            last_update_time = current_time
+                            elif rain_percent < 85:
 
-                elif current_time - last_update_time < 12 and rainfall > 100:
+                                last_risk = "Risk"
 
-                    rainfall = last_rain_value
+                            else:
 
-                else:
+                                last_risk = "High Risk"
 
-                    last_rain_value = max(rainfall, last_rain_value * 0.9)
+            except Exception:
 
-                    rainfall = last_rain_value
+                pass
 
-                rain_percent = (rainfall / 4095) * 100
-
-                return rainfall, rain_percent
-
-        except Exception as e:
-
-            print("Sensor Error:", e)
-
-    return last_rain_value, (last_rain_value / 4095) * 100
+        # FAST RESPONSE
+        time.sleep(0.05)
 
 
-# AI PREDICTION
-def predict_risk(rain_percent):
-
-    if rain_percent <= 30:
-        return "Normal", rain_percent
-
-    elif rain_percent <= 50:
-        return "Average", rain_percent
-
-    elif rain_percent <= 80:
-        return "Risk", rain_percent
-
-    else:
-        return "High Risk", min(100, rain_percent)
+# START SENSOR THREAD
+threading.Thread(
+    target=sensor_loop,
+    daemon=True
+).start()
 
 
 # HOME ROUTE
 @app.route("/")
 def home():
 
-    return send_from_directory(".", "dashboard.html")
+    return send_from_directory(
+        ".",
+        "dashboard.html"
+    )
 
 
-# DATA API
-@app.route("/data", methods=["GET", "POST"])
+# API ROUTE
+@app.route("/data")
 def data():
 
-    global last_rain_value
-
-    # ESP32 POST
-    if request.method == "POST":
-
-        try:
-            data = request.get_json(force=True)
-
-            if data and "rainfall" in data:
-
-                last_rain_value = int(data["rainfall"])
-
-                print("Received:", last_rain_value)
-
-        except Exception as e:
-
-            print("POST Error:", e)
-
-        return jsonify({
-            "status": "received"
-        })
-
-    # DASHBOARD GET
-    rainfall, rain_percent = get_sensor_data()
-
-    risk, score = predict_risk(rain_percent)
-
     return jsonify({
-        "rainfall": int(rainfall),
-        "score": round(float(score), 2),
-        "risk": risk
+
+        "rainfall": last_rain_value,
+
+        "score": last_score,
+
+        "risk": last_risk
+
     })
 
 
