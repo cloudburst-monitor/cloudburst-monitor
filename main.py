@@ -7,8 +7,7 @@ import os
 app = Flask(__name__)
 
 # ESP32 CONNECT
-try:
-    arduino = None
+arduino = None
 
 try:
 
@@ -25,12 +24,6 @@ try:
 except Exception as e:
 
     print("Running without ESP32")
-    time.sleep(2)
-    print("ESP32 Connected")
-
-except Exception as e:
-    arduino = None
-    print("ESP32 NOT connected:", e)
 
 
 # GLOBAL VALUES
@@ -89,7 +82,7 @@ def sensor_loop():
                                 2
                             )
 
-                            # UPDATED RISK LOGIC
+                            # RISK LOGIC
                             if rain_percent <= 30:
 
                                 last_risk = "Normal"
