@@ -8,7 +8,23 @@ app = Flask(__name__)
 
 # ESP32 CONNECT
 try:
-    arduino = serial.Serial('COM6', 115200, timeout=1)
+    arduino = None
+
+try:
+
+    arduino = serial.Serial(
+        'COM6',
+        115200,
+        timeout=1
+    )
+
+    time.sleep(2)
+
+    print("ESP32 Connected")
+
+except Exception as e:
+
+    print("Running without ESP32")
     time.sleep(2)
     print("ESP32 Connected")
 
