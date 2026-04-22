@@ -50,19 +50,19 @@ body{
 
 .cards{
     display:flex;
-    justify-content:space-around;
+    justify-content:space-between;
+    align-items:center;
     margin:20px;
-    flex-wrap:wrap;
+    gap:15px;
+    flex-wrap:nowrap;
 }
 
 .card{
     background:#112b45;
     padding:15px;
     border-radius:10px;
-    width:22%;
+    width:24%;
     text-align:center;
-    min-width:180px;
-    margin:10px;
 }
 
 .card p{
@@ -284,7 +284,6 @@ async function fetchData(){
         let status =
         document.getElementById("status");
 
-        // NORMAL
         if(riskPercent <= 30){
 
             status.innerText = "Normal";
@@ -295,7 +294,6 @@ async function fetchData(){
             .style.display = "none";
         }
 
-        // AVERAGE
         else if(riskPercent <= 50){
 
             status.innerText = "Average";
@@ -306,7 +304,6 @@ async function fetchData(){
             .style.display = "none";
         }
 
-        // RISK
         else if(riskPercent <= 80){
 
             status.innerText = "Risk";
@@ -317,7 +314,6 @@ async function fetchData(){
             .style.display = "none";
         }
 
-        // HIGH RISK
         else{
 
             status.innerText = "High Risk";
