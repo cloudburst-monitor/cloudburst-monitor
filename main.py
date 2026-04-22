@@ -40,13 +40,19 @@ def get_sensor_data():
                 value = arduino.readline().decode(errors='ignore').strip()
 
                 if value.isdigit():
+
+                    # Ignore false zero readings
+                    if int(value) == 0:
+                        continue
+
                     readings = [int(value)]
 
             if readings:
 
                 rain_raw = readings[-1]
 
-                rainfall = 4095 - rain_raw
+                # Safe rainfall calculation
+                rainfall = max(0, 4095 - rain_raw)
 
                 current_time = time.time()
 
@@ -56,7 +62,7 @@ def get_sensor_data():
 
                     if confirm.isdigit():
 
-                        confirm_val = 4095 - int(confirm)
+                        confirm_val = max(0, 4095 - int(confirm))
 
                         if confirm_val > last_rain_value + 20:
 
