@@ -10,13 +10,16 @@ CORS(app)
 
 DATA_FILE = "data.json"
 
+# -----------------------------
+# CREATE DATA FILE
+# -----------------------------
 if not os.path.exists(DATA_FILE):
 
     with open(DATA_FILE, "w") as f:
         json.dump({}, f)
 
 # -----------------------------
-# HOME
+# HOME ROUTE
 # -----------------------------
 @app.route("/")
 def home():
@@ -33,15 +36,22 @@ def receive_data():
 
         data = request.get_json()
 
+        # -----------------------------
+        # RAW SENSOR VALUE
+        # -----------------------------
         raw_value = data.get("rainfall", 0)
 
+        # -----------------------------
         # SENSOR CONVERSION
-        rainfall = int(raw_value / 40)
+        # -----------------------------
+        rainfall = int((4095 - raw_value) / 40)
 
         if rainfall < 0:
             rainfall = 0
 
+        # -----------------------------
         # AI RISK LOGIC
+        # -----------------------------
         if rainfall <= 20:
 
             risk = 15
@@ -62,27 +72,51 @@ def receive_data():
             risk = 95
             status = "Extreme Danger"
 
+        # -----------------------------
+        # LIVE LOCATION
+        # -----------------------------
+        lat = 30.7046
+        lon = 76.7179
+
+        location = f"Lat: {lat:.4f}, Lon: {lon:.4f}"
+
+        # -----------------------------
+        # INDIAN TIME
+        # -----------------------------
         india = pytz.timezone("Asia/Kolkata")
 
         current_time = datetime.now(india).strftime(
             "%I:%M:%S %p"
         )
 
+        # -----------------------------
+        # FINAL DATA
+        # -----------------------------
         final_data = {
 
             "rainfall": rainfall,
             "risk": risk,
             "status": status,
             "time": current_time,
-            "lat": 30.7046,
-            "lon": 76.7179
+            "lat": lat,
+            "lon": lon,
+            "location": location
         }
 
+        # -----------------------------
+        # SAVE JSON
+        # -----------------------------
         with open(DATA_FILE, "w") as f:
             json.dump(final_data, f)
 
         return jsonify({
-            "message": "success"
+
+            "message": "success",
+            "rainfall": rainfall,
+            "risk": risk,
+            "status": status,
+            "location": location
+
         }), 200
 
     except Exception as e:
@@ -91,8 +125,9 @@ def receive_data():
             "error": str(e)
         }), 500
 
+
 # -----------------------------
-# GET DATA
+# SEND DATA TO DASHBOARD
 # -----------------------------
 @app.route("/getdata")
 def get_data():
@@ -113,11 +148,14 @@ def get_data():
             "status": "No Data",
             "time": "--:--",
             "lat": 30.7046,
-            "lon": 76.7179
+            "lon": 76.7179,
+            "location": "Lat: 30.7046, Lon: 76.7179"
+
         })
 
+
 # -----------------------------
-# RUN
+# RUN APP
 # -----------------------------
 if __name__ == "__main__":
 
