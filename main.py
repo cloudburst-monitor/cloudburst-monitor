@@ -29,28 +29,40 @@ def home():
 # -----------------------------
 @app.route("/data", methods=["POST"])
 def receive_data():
+
     try:
         data = request.get_json()
 
         rainfall = data.get("rainfall", 0)
 
-        # AI Risk Calculation
-        if rainfall < 30:
-            risk = 10
-            status = "Normal"
+        # -----------------------------
+        # UPDATED AI RISK LOGIC
+        # -----------------------------
+        if rainfall <= 20:
+            risk = 15
+            status = "Normal Risk"
 
-        elif rainfall < 70:
-            risk = 55
-            status = "Warning"
+        elif rainfall <= 50:
+            risk = 45
+            status = "Average Risk"
+
+        elif rainfall <= 80:
+            risk = 75
+            status = "High Risk"
 
         else:
             risk = 95
-            status = "DANGER"
+            status = "Extreme Danger"
 
-        # Indian Time
+        # -----------------------------
+        # INDIAN TIME
+        # -----------------------------
         india = pytz.timezone("Asia/Kolkata")
         current_time = datetime.now(india).strftime("%I:%M:%S %p")
 
+        # -----------------------------
+        # FINAL DATA
+        # -----------------------------
         final_data = {
             "rainfall": rainfall,
             "risk": risk,
@@ -80,6 +92,7 @@ def receive_data():
 # -----------------------------
 @app.route("/getdata")
 def get_data():
+
     try:
         with open(DATA_FILE, "r") as f:
             data = json.load(f)
@@ -87,6 +100,7 @@ def get_data():
         return jsonify(data)
 
     except:
+
         return jsonify({
             "rainfall": 0,
             "risk": 0,
@@ -98,138 +112,205 @@ def get_data():
 
 
 # -----------------------------
-# DASHBOARD UI
+# DASHBOARD
 # -----------------------------
 @app.route("/dashboard")
 def dashboard():
 
     html = """
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <title>AI Cloudburst Monitoring Dashboard</title>
 
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!DOCTYPE html>
+<html>
 
-        <link rel="stylesheet"
-        href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<head>
 
-        <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <title>AI Cloudburst EWS</title>
 
-        <style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-            body{
-                margin:0;
-                font-family:Arial;
-                background:#071b2f;
-                color:white;
-                text-align:center;
-            }
+    <link rel="stylesheet"
+    href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 
-            h1{
-                padding:20px;
-            }
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
-            #map{
-                height:400px;
-                width:90%;
-                margin:auto;
-                border-radius:15px;
-            }
+<style>
 
-            .cards{
-                display:flex;
-                flex-wrap:wrap;
-                justify-content:center;
-                margin-top:20px;
-            }
+body{
+    margin:0;
+    font-family:'Segoe UI',sans-serif;
+    background:linear-gradient(to bottom,#031525,#0a2744);
+    color:white;
+    text-align:center;
+}
 
-            .card{
-                background:#0f2f4f;
-                margin:10px;
-                padding:25px;
-                border-radius:15px;
-                width:220px;
-                box-shadow:0px 0px 10px rgba(0,0,0,0.5);
-            }
+h1{
+    padding:25px;
+    font-size:42px;
+    font-weight:bold;
+}
 
-            .value{
-                font-size:40px;
-                font-weight:bold;
-                margin-top:15px;
-            }
+#map{
+    height:420px;
+    width:92%;
+    margin:auto;
+    border-radius:20px;
+    overflow:hidden;
+    box-shadow:0 0 25px rgba(0,0,0,0.5);
+}
 
-        </style>
-    </head>
+.cards{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    margin-top:25px;
+    margin-bottom:30px;
+}
 
-    <body>
+.card{
+    background: linear-gradient(145deg,#0b2d4d,#123d63);
+    margin:15px;
+    padding:30px;
+    border-radius:20px;
+    width:240px;
+    box-shadow:0 8px 25px rgba(0,0,0,0.4);
+    transition:0.3s;
+}
 
-        <h1>☁️ AI Cloudburst Monitoring Dashboard</h1>
+.card:hover{
+    transform:translateY(-5px);
+}
 
-        <div id="map"></div>
+.card h2{
+    margin:0;
+    font-size:24px;
+}
 
-        <div class="cards">
+.value{
+    font-size:42px;
+    font-weight:bold;
+    margin-top:20px;
+}
 
-            <div class="card">
-                <h2>Rainfall</h2>
-                <div class="value" id="rainfall">0</div>
-            </div>
+.footer{
+    margin-top:20px;
+    padding-bottom:25px;
+    opacity:0.8;
+}
 
-            <div class="card">
-                <h2>AI Risk %</h2>
-                <div class="value" id="risk">0%</div>
-            </div>
+</style>
 
-            <div class="card">
-                <h2>Status</h2>
-                <div class="value" id="status">Normal</div>
-            </div>
+</head>
 
-            <div class="card">
-                <h2>Time</h2>
-                <div class="value" id="time">--:--</div>
-            </div>
+<body>
 
-        </div>
+<h1>☁️ AI Cloudburst Early Warning System</h1>
 
-        <script>
+<div id="map"></div>
 
-            var map = L.map('map').setView([30.7046, 76.7179], 12);
+<div class="cards">
 
-            L.tileLayer(
-                'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                {
-                    attribution:'© OpenStreetMap'
-                }
-            ).addTo(map);
+    <div class="card">
+        <h2>🌧 Rainfall</h2>
+        <div class="value" id="rainfall">0</div>
+    </div>
 
-            var marker = L.marker([30.7046, 76.7179]).addTo(map);
+    <div class="card">
+        <h2>🧠 AI Risk</h2>
+        <div class="value" id="risk">0%</div>
+    </div>
 
-            async function fetchData(){
+    <div class="card">
+        <h2>⚠ Status</h2>
+        <div class="value" id="status">Normal</div>
+    </div>
 
-                let response = await fetch('/getdata');
-                let data = await response.json();
+    <div class="card">
+        <h2>🕒 Time</h2>
+        <div class="value" id="time">--:--</div>
+    </div>
 
-                document.getElementById("rainfall").innerHTML = data.rainfall;
-                document.getElementById("risk").innerHTML = data.risk + "%";
-                document.getElementById("status").innerHTML = data.status;
-                document.getElementById("time").innerHTML = data.time;
+</div>
 
-                marker.setLatLng([data.lat, data.lon]);
+<div class="footer">
+    Real-Time Hyperlocal Disaster Monitoring System
+</div>
 
-                map.setView([data.lat, data.lon], 12);
-            }
+<script>
 
-            fetchData();
+var map = L.map('map').setView([30.7046, 76.7179], 12);
 
-            setInterval(fetchData, 3000);
+L.tileLayer(
+'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+{
+    attribution:'© OpenStreetMap'
+}
+).addTo(map);
 
-        </script>
+var marker = L.marker([30.7046, 76.7179]).addTo(map);
 
-    </body>
-    </html>
-    """
+async function fetchData(){
+
+    let response = await fetch('/getdata');
+    let data = await response.json();
+
+    document.getElementById("rainfall").innerHTML = data.rainfall;
+
+    document.getElementById("risk").innerHTML =
+    data.risk + "%";
+
+    document.getElementById("status").innerHTML =
+    data.status;
+
+    document.getElementById("time").innerHTML =
+    data.time;
+
+    // -----------------------------
+    // STATUS COLOR
+    // -----------------------------
+
+    let statusElement =
+    document.getElementById("status");
+
+    if(data.status == "Normal Risk"){
+
+        statusElement.style.color = "#00ff88";
+    }
+
+    else if(data.status == "Average Risk"){
+
+        statusElement.style.color = "#ffd000";
+    }
+
+    else if(data.status == "High Risk"){
+
+        statusElement.style.color = "#ff8800";
+    }
+
+    else{
+
+        statusElement.style.color = "#ff3b3b";
+    }
+
+    // -----------------------------
+    // MAP UPDATE
+    // -----------------------------
+
+    marker.setLatLng([data.lat, data.lon]);
+
+    map.setView([data.lat, data.lon], 12);
+}
+
+fetchData();
+
+setInterval(fetchData, 3000);
+
+</script>
+
+</body>
+</html>
+
+"""
 
     return render_template_string(html)
 
@@ -238,5 +319,10 @@ def dashboard():
 # RUN APP
 # -----------------------------
 if __name__ == "__main__":
+
     port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+
+    app.run(
+        host="0.0.0.0",
+        port=port
+    )
