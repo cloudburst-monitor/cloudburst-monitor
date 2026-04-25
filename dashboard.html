@@ -395,15 +395,15 @@ AI-Powered Hyperlocal Climate Intelligence Platform
 
 </div>
 
-<!-- REPLACE ONLY THIS SCRIPT PART -->
-
 <script>
 
-/* ---------------- MAP ---------------- */
+/* -----------------------------
+MAP
+----------------------------- */
 
 var map = L.map('map').setView(
     [30.7046,76.7179],
-    11
+    12
 );
 
 L.tileLayer(
@@ -417,80 +417,9 @@ var marker = L.marker(
     [30.7046,76.7179]
 ).addTo(map);
 
-/* ---------------- GRAPH DATA ---------------- */
-
-let rainfallHistory = [];
-
-let timeHistory = [];
-
-/* ---------------- CHART ---------------- */
-
-const ctx =
-document.getElementById(
-'rainChart'
-).getContext('2d');
-
-const rainChart =
-new Chart(ctx,{
-
-    type:'line',
-
-    data:{
-
-        labels:timeHistory,
-
-        datasets:[{
-
-            label:'Rainfall',
-
-            data:rainfallHistory,
-
-            borderColor:'#00c3ff',
-
-            backgroundColor:
-            'rgba(0,195,255,0.2)',
-
-            fill:true,
-
-            tension:0.4,
-
-            pointRadius:4
-        }]
-    },
-
-    options:{
-
-        responsive:true,
-
-        plugins:{
-
-            legend:{
-                labels:{
-                    color:'white'
-                }
-            }
-        },
-
-        scales:{
-
-            x:{
-                ticks:{
-                    color:'white'
-                }
-            },
-
-            y:{
-                ticks:{
-                    color:'white'
-                },
-
-                beginAtZero:true
-            }
-        }
-    }
-});
-
-/* ---------------- FETCH DATA ---------------- */
+/* -----------------------------
+FETCH DATA
+----------------------------- */
 
 async function fetchData(){
 
@@ -499,8 +428,6 @@ async function fetchData(){
 
     let data =
     await response.json();
-
-    /* ---------------- VALUES ---------------- */
 
     document.getElementById(
     "rainfall").innerHTML =
@@ -518,12 +445,12 @@ async function fetchData(){
     "time").innerHTML =
     data.time;
 
-    /* ---------------- STATUS COLOR ---------------- */
+    /* -----------------------------
+    STATUS COLORS
+    ----------------------------- */
 
     let statusElement =
-    document.getElementById(
-    "status"
-    );
+    document.getElementById("status");
 
     statusElement.className =
     "value";
@@ -543,7 +470,7 @@ async function fetchData(){
     }
 
     else if(data.status ==
-    "high risk"){
+    "High Risk"){
 
         statusElement.classList
         .add("high");
@@ -555,12 +482,13 @@ async function fetchData(){
         .add("extreme");
     }
 
-    /* ---------------- ALERT ---------------- */
+    /* -----------------------------
+    ALERT BANNER
+    ----------------------------- */
 
     let banner =
     document.getElementById(
-    "alertBanner"
-    );
+    "alertBanner");
 
     if(data.risk >= 95){
 
@@ -568,7 +496,7 @@ async function fetchData(){
         "block";
 
         banner.style.background =
-        "linear-gradient(90deg,#ff0000,#a10000)";
+        "linear-gradient(90deg,#ff0000,#b30000)";
 
         banner.innerHTML =
         "🚨 EXTREME DANGER ALERT 🚨";
@@ -580,36 +508,20 @@ async function fetchData(){
         "none";
     }
 
-    /* ---------------- MAP UPDATE ---------------- */
+    /* -----------------------------
+    MAP UPDATE
+    ----------------------------- */
 
     marker.setLatLng([
         data.lat,
         data.lon
     ]);
 
-    /* ---------------- REAL GRAPH UPDATE ---------------- */
-
-    rainfallHistory.push(
-    data.rainfall
-    );
-
-    timeHistory.push(
-    data.time
-    );
-
-    /* only last 10 values */
-
-    if(rainfallHistory.length > 10){
-
-        rainfallHistory.shift();
-
-        timeHistory.shift();
-    }
-
-    rainChart.update();
+    map.setView([
+        data.lat,
+        data.lon
+    ],12);
 }
-
-/* ---------------- AUTO REFRESH ---------------- */
 
 fetchData();
 
