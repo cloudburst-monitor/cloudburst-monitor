@@ -509,6 +509,50 @@ var marker = L.marker(
 [30.7046,76.7179]
 ).addTo(map);
 
+/* LIVE BROWSER LOCATION */
+
+navigator.geolocation.watchPosition(
+
+function(position){
+
+    let lat = position.coords.latitude;
+    let lon = position.coords.longitude;
+
+    /* UPDATE MARKER */
+
+    marker.setLatLng([lat, lon]);
+
+    /* MOVE MAP */
+
+    map.setView([lat, lon], 12);
+
+    /* SHOW LIVE LOCATION */
+
+    document.getElementById(
+    "liveLocation"
+    ).innerHTML =
+
+    "📍 Lat: " +
+    lat.toFixed(4) +
+    " , Lon: " +
+    lon.toFixed(4);
+
+},
+
+function(error){
+
+    console.log(error);
+
+    document.getElementById(
+    "liveLocation"
+    ).innerHTML =
+
+    "📍 Location Permission Denied";
+
+}
+
+);
+
 /* GRAPH */
 
 let rainfallHistory = [];
@@ -605,14 +649,6 @@ async function fetchData(){
     "time").innerHTML =
     data.time;
 
-    /* LIVE LOCATION */
-
-    document.getElementById(
-    "liveLocation"
-    ).innerHTML =
-
-    "📍 " + data.location;
-
     /* STATUS COLOR */
 
     let statusElement =
@@ -650,7 +686,7 @@ async function fetchData(){
         .add("extreme");
     }
 
-    /* ALERT */
+    /* ALERT BANNER */
 
     let banner =
     document.getElementById(
@@ -669,19 +705,7 @@ async function fetchData(){
         "none";
     }
 
-    /* MAP */
-
-    marker.setLatLng([
-        data.lat,
-        data.lon
-    ]);
-
-    map.setView([
-        data.lat,
-        data.lon
-    ],11);
-
-    /* GRAPH */
+    /* GRAPH UPDATE */
 
     rainfallHistory.push(
     data.rainfall
