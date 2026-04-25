@@ -1,333 +1,358 @@
+<!-- ========================= -->
+<!-- FULL UPDATED dashboard.html -->
+<!-- ========================= -->
+
 <!DOCTYPE html>
-<html lang="en">
+<html>
 
 <head>
 
-<meta charset="UTF-8">
+    <title>AI Cloudburst EWS</title>
 
-<meta name="viewport"
-content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
 
-<title>AI Cloudburst Early Warning System</title>
+    <meta name="viewport"
+    content="width=device-width, initial-scale=1.0">
 
-<link rel="stylesheet"
-href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+    <!-- LEAFLET -->
+    <link rel="stylesheet"
+    href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src=
+    "https://unpkg.com/leaflet/dist/leaflet.js">
+    </script>
 
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
-rel="stylesheet">
+    <!-- CHART JS -->
+    <script src=
+    "https://cdn.jsdelivr.net/npm/chart.js">
+    </script>
 
-<style>
+    <style>
 
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-}
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+            font-family:'Segoe UI';
+        }
 
-body{
+        body{
 
-    font-family:'Poppins',sans-serif;
+            background:
+            linear-gradient(
+            135deg,
+            #021526,
+            #03346E,
+            #021526
+            );
 
-    background:
-    linear-gradient(
-    180deg,
-    #02111f,
-    #062540,
-    #041a2d
-    );
+            color:white;
+            min-height:100vh;
+            overflow-x:hidden;
+        }
 
-    color:white;
+        /* HEADER */
 
-    overflow-x:hidden;
-}
+        .header{
 
-/* -----------------------------
-HEADER
------------------------------ */
+            text-align:center;
+            padding:20px;
+        }
 
-.header{
+        .header h1{
 
-    width:100%;
+            font-size:55px;
+            font-weight:800;
+        }
 
-    padding:25px;
+        .header p{
 
-    text-align:center;
+            margin-top:8px;
+            color:#cfd8dc;
+            font-size:18px;
+        }
 
-    backdrop-filter:blur(10px);
+        /* ALERT */
 
-    background:
-    rgba(255,255,255,0.03);
+        #alertBanner{
 
-    border-bottom:
-    1px solid rgba(255,255,255,0.08);
-}
+            display:none;
 
-.header h1{
+            width:100%;
 
-    font-size:42px;
+            text-align:center;
 
-    font-weight:700;
+            padding:14px;
 
-    letter-spacing:1px;
-}
+            font-size:24px;
 
-.header p{
+            font-weight:bold;
 
-    margin-top:8px;
+            background:red;
 
-    opacity:0.8;
+            animation:blink 1s infinite;
+        }
 
-    font-size:16px;
-}
+        @keyframes blink{
 
-/* -----------------------------
-ALERT BANNER
------------------------------ */
+            50%{
+                opacity:0.5;
+            }
+        }
 
-#alertBanner{
+        /* MAP */
 
-    width:92%;
+        #map{
 
-    margin:20px auto;
+            width:92%;
+            height:320px;
 
-    padding:18px;
+            margin:auto;
 
-    border-radius:18px;
+            border-radius:22px;
 
-    font-size:28px;
+            overflow:hidden;
 
-    font-weight:700;
+            border:3px solid rgba(255,255,255,0.1);
 
-    display:none;
+            box-shadow:
+            0 0 30px rgba(0,0,0,0.4);
+        }
 
-    animation:blink 1s infinite;
+        /* CARDS */
 
-    box-shadow:0 0 25px red;
-}
+        .cards{
 
-@keyframes blink{
+            width:92%;
 
-    50%{
-        opacity:0.5;
-    }
-}
+            margin:22px auto;
 
-/* -----------------------------
-MAP
------------------------------ */
+            display:grid;
 
-.map-container{
+            grid-template-columns:
+            repeat(4,1fr);
 
-    width:92%;
+            gap:18px;
+        }
 
-    margin:auto;
+        .card{
 
-    margin-top:20px;
-}
+            background:
+            rgba(255,255,255,0.08);
 
-#map{
+            border-radius:24px;
 
-    height:450px;
+            padding:22px;
 
-    border-radius:24px;
+            backdrop-filter:blur(12px);
 
-    overflow:hidden;
+            box-shadow:
+            0 8px 30px rgba(0,0,0,0.35);
 
-    box-shadow:
-    0 10px 35px rgba(0,0,0,0.5);
-}
+            position:relative;
 
-/* -----------------------------
-CARDS
------------------------------ */
+            overflow:hidden;
 
-.cards{
+            min-height:170px;
+        }
 
-    width:92%;
+        .card::before{
 
-    margin:auto;
+            content:'';
 
-    margin-top:30px;
+            position:absolute;
 
-    display:grid;
+            width:120px;
+            height:120px;
 
-    grid-template-columns:
-    repeat(auto-fit,minmax(220px,1fr));
+            background:
+            rgba(255,255,255,0.06);
 
-    gap:20px;
-}
+            border-radius:50%;
 
-.card{
+            top:-30px;
+            right:-30px;
+        }
 
-    position:relative;
+        .card h2{
 
-    overflow:hidden;
+            font-size:20px;
+            margin-bottom:25px;
+        }
 
-    padding:28px;
+        .value{
 
-    border-radius:24px;
+            font-size:54px;
+            font-weight:bold;
+        }
 
-    background:
-    rgba(255,255,255,0.05);
+        /* STATUS COLORS */
 
-    backdrop-filter:blur(12px);
+        .normal{
+            color:#00ff95;
+        }
 
-    border:
-    1px solid rgba(255,255,255,0.08);
+        .average{
+            color:#ffd500;
+        }
 
-    transition:0.35s;
-}
+        .high{
+            color:#ff9800;
+        }
 
-.card:hover{
+        .extreme{
+            color:#ff3131;
+        }
 
-    transform:
-    translateY(-8px);
+        /* GRAPH */
 
-    box-shadow:
-    0 10px 30px rgba(0,0,0,0.45);
-}
+        .graph-container{
 
-.card::before{
+            width:92%;
 
-    content:"";
+            margin:auto;
 
-    position:absolute;
+            background:
+            rgba(255,255,255,0.08);
 
-    width:140px;
-    height:140px;
+            border-radius:24px;
 
-    background:
-    rgba(255,255,255,0.06);
+            padding:25px;
 
-    border-radius:50%;
+            box-shadow:
+            0 8px 30px rgba(0,0,0,0.35);
+        }
 
-    top:-50px;
-    right:-40px;
-}
+        .graph-title{
 
-.card h2{
+            font-size:28px;
 
-    font-size:20px;
+            margin-bottom:20px;
+        }
 
-    font-weight:500;
+        /* NODE ALERTS */
 
-    opacity:0.9;
-}
+        .node-alerts{
 
-.value{
+            width:92%;
 
-    margin-top:18px;
+            margin:25px auto;
 
-    font-size:38px;
+            background:
+            rgba(255,255,255,0.08);
 
-    font-weight:700;
-}
+            border-radius:24px;
 
-/* -----------------------------
-STATUS COLORS
------------------------------ */
+            padding:20px;
 
-.normal{
-    color:#00ff88;
-}
+            box-shadow:
+            0 8px 30px rgba(0,0,0,0.35);
+        }
 
-.average{
-    color:#ffd000;
-}
+        .node-alerts h2{
 
-.high{
-    color:#ff8800;
-}
+            margin-bottom:18px;
+        }
 
-.extreme{
-    color:#ff3b3b;
-}
+        .node{
 
-/* -----------------------------
-FOOTER
------------------------------ */
+            background:
+            rgba(255,255,255,0.06);
 
-.footer{
+            padding:14px;
 
-    margin-top:35px;
+            border-radius:14px;
 
-    padding:25px;
+            margin-bottom:12px;
 
-    text-align:center;
+            display:flex;
 
-    opacity:0.7;
+            justify-content:space-between;
 
-    font-size:15px;
-}
+            align-items:center;
+        }
 
-/* -----------------------------
-RESPONSIVE
------------------------------ */
+        .active{
+            color:#00ff95;
+            font-weight:bold;
+        }
 
-@media(max-width:768px){
+        .danger{
+            color:#ff3131;
+            font-weight:bold;
+        }
 
-    .header h1{
+        footer{
 
-        font-size:30px;
-    }
+            text-align:center;
 
-    #map{
+            padding:25px;
 
-        height:350px;
-    }
+            color:#cfd8dc;
 
-    .value{
+            font-size:17px;
+        }
 
-        font-size:30px;
-    }
+        /* MOBILE */
 
-    #alertBanner{
+        @media(max-width:1000px){
 
-        font-size:22px;
-    }
-}
+            .cards{
 
-</style>
+                grid-template-columns:
+                repeat(2,1fr);
+            }
+        }
+
+        @media(max-width:700px){
+
+            .cards{
+
+                grid-template-columns:1fr;
+            }
+
+            .header h1{
+
+                font-size:32px;
+            }
+
+            #map{
+
+                height:240px;
+            }
+        }
+
+    </style>
 
 </head>
 
 <body>
 
-<!-- -----------------------------
-HEADER
------------------------------- -->
+<!-- ALERT -->
+
+<div id="alertBanner">
+
+🚨 EXTREME DANGER ALERT 🚨
+
+</div>
+
+<!-- HEADER -->
 
 <div class="header">
 
-    <h1>☁️ AI Cloudburst Early Warning System</h1>
+<h1>☁️ AI Cloudburst Early Warning System</h1>
 
-    <p>
-    Real-Time Hyperlocal Disaster Monitoring Dashboard
-    </p>
-
-</div>
-
-<!-- -----------------------------
-ALERT BANNER
------------------------------- -->
-
-<div id="alertBanner"></div>
-
-<!-- -----------------------------
-MAP
------------------------------- -->
-
-<div class="map-container">
-
-    <div id="map"></div>
+<p>
+Real-Time Hyperlocal Disaster Monitoring Dashboard
+</p>
 
 </div>
 
-<!-- -----------------------------
-CARDS
------------------------------- -->
+<!-- MAP -->
+
+<div id="map"></div>
+
+<!-- CARDS -->
 
 <div class="cards">
 
@@ -337,9 +362,7 @@ CARDS
 
         <div class="value"
         id="rainfall">
-
         0
-
         </div>
 
     </div>
@@ -350,22 +373,18 @@ CARDS
 
         <div class="value"
         id="risk">
-
         0%
-
         </div>
 
     </div>
 
     <div class="card">
 
-        <h2>⚠ Status</h2>
+        <h2>⚠️ Status</h2>
 
         <div class="value"
         id="status">
-
         Normal
-
         </div>
 
     </div>
@@ -376,50 +395,165 @@ CARDS
 
         <div class="value"
         id="time">
-
-        --:--
-
+        --
         </div>
 
     </div>
 
 </div>
 
-<!-- -----------------------------
-FOOTER
------------------------------- -->
+<!-- GRAPH -->
 
-<div class="footer">
+<div class="graph-container">
 
-AI-Powered Hyperlocal Climate Intelligence Platform
+<h2 class="graph-title">
+
+📈 Live Rainfall Monitoring Graph
+
+</h2>
+
+<canvas id="rainChart"></canvas>
 
 </div>
 
+<!-- ACTIVE NODE ALERTS -->
+
+<div class="node-alerts">
+
+<h2>📡 Active Node Alerts</h2>
+
+<div class="node">
+
+<span>Node 01 - Mohali Sector 70</span>
+
+<span class="active">
+ACTIVE
+</span>
+
+</div>
+
+<div class="node">
+
+<span>Node 02 - Chandigarh Sector 44</span>
+
+<span class="active">
+ACTIVE
+</span>
+
+</div>
+
+<div class="node">
+
+<span>Node 03 - Kharar Zone</span>
+
+<span class="danger">
+HIGH RISK
+</span>
+
+</div>
+
+</div>
+
+<footer>
+
+AI-Powered Hyperlocal Climate Intelligence Platform
+
+</footer>
+
 <script>
 
-/* -----------------------------
-MAP
------------------------------ */
+/* ================= MAP ================= */
 
 var map = L.map('map').setView(
-    [30.7046,76.7179],
-    12
+[30.7046,76.7179],
+11
 );
 
 L.tileLayer(
 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
 {
-    attribution:'© OpenStreetMap'
+attribution:'© OpenStreetMap'
 }
 ).addTo(map);
 
 var marker = L.marker(
-    [30.7046,76.7179]
+[30.7046,76.7179]
 ).addTo(map);
 
-/* -----------------------------
-FETCH DATA
------------------------------ */
+/* ================= GRAPH ================= */
+
+let rainfallHistory = [];
+let timeHistory = [];
+
+const ctx =
+document.getElementById(
+'rainChart'
+).getContext('2d');
+
+const rainChart =
+new Chart(ctx,{
+
+    type:'line',
+
+    data:{
+
+        labels:timeHistory,
+
+        datasets:[{
+
+            label:'Rainfall',
+
+            data:rainfallHistory,
+
+            borderColor:'#00c3ff',
+
+            backgroundColor:
+            'rgba(0,195,255,0.2)',
+
+            fill:true,
+
+            tension:0.4,
+
+            pointRadius:4
+        }]
+    },
+
+    options:{
+
+        responsive:true,
+
+        plugins:{
+
+            legend:{
+
+                labels:{
+                    color:'white'
+                }
+            }
+        },
+
+        scales:{
+
+            x:{
+
+                ticks:{
+                    color:'white'
+                }
+            },
+
+            y:{
+
+                beginAtZero:true,
+
+                ticks:{
+                    color:'white'
+                }
+            }
+        }
+    }
+});
+
+/* ================= FETCH ================= */
 
 async function fetchData(){
 
@@ -429,31 +563,35 @@ async function fetchData(){
     let data =
     await response.json();
 
+    /* VALUES */
+
     document.getElementById(
-    "rainfall").innerHTML =
+    'rainfall'
+    ).innerHTML =
     data.rainfall;
 
     document.getElementById(
-    "risk").innerHTML =
+    'risk'
+    ).innerHTML =
     data.risk + "%";
 
     document.getElementById(
-    "status").innerHTML =
-    data.status;
-
-    document.getElementById(
-    "time").innerHTML =
+    'time'
+    ).innerHTML =
     data.time;
 
-    /* -----------------------------
-    STATUS COLORS
-    ----------------------------- */
-
     let statusElement =
-    document.getElementById("status");
+    document.getElementById(
+    'status'
+    );
+
+    statusElement.innerHTML =
+    data.status;
 
     statusElement.className =
     "value";
+
+    /* STATUS COLOR */
 
     if(data.status ==
     "Normal Risk"){
@@ -470,7 +608,7 @@ async function fetchData(){
     }
 
     else if(data.status ==
-    "High Risk"){
+    "high risk"){
 
         statusElement.classList
         .add("high");
@@ -482,24 +620,17 @@ async function fetchData(){
         .add("extreme");
     }
 
-    /* -----------------------------
-    ALERT BANNER
-    ----------------------------- */
+    /* ALERT */
 
     let banner =
     document.getElementById(
-    "alertBanner");
+    "alertBanner"
+    );
 
     if(data.risk >= 95){
 
         banner.style.display =
         "block";
-
-        banner.style.background =
-        "linear-gradient(90deg,#ff0000,#b30000)";
-
-        banner.innerHTML =
-        "🚨 EXTREME DANGER ALERT 🚨";
     }
 
     else{
@@ -508,20 +639,34 @@ async function fetchData(){
         "none";
     }
 
-    /* -----------------------------
-    MAP UPDATE
-    ----------------------------- */
+    /* MAP */
 
     marker.setLatLng([
         data.lat,
         data.lon
     ]);
 
-    map.setView([
-        data.lat,
-        data.lon
-    ],12);
+    /* LIVE GRAPH */
+
+    rainfallHistory.push(
+    data.rainfall
+    );
+
+    timeHistory.push(
+    data.time
+    );
+
+    if(rainfallHistory.length > 10){
+
+        rainfallHistory.shift();
+
+        timeHistory.shift();
+    }
+
+    rainChart.update();
 }
+
+/* AUTO UPDATE */
 
 fetchData();
 
