@@ -702,96 +702,139 @@ new Chart(ctx,{
 
 async function fetchData(){
 
-    let response =
-    await fetch('/getdata');
+    try{
 
-    let data =
-    await response.json();
+        let response =
+        await fetch('/getdata');
 
-    document.getElementById(
-    "rainfall").innerHTML =
-    data.rainfall;
+        let data =
+        await response.json();
 
-    document.getElementById(
-    "risk").innerHTML =
-    data.risk + "%";
+        /* SAFE FALLBACKS */
 
-    document.getElementById(
-    "status").innerHTML =
-    data.status;
+        let rainfall =
+        data.rainfall ?? 0;
 
-    document.getElementById(
-    "time").innerHTML =
-    data.time;
+        let risk =
+        data.risk ?? 15;
 
-    let statusElement =
-    document.getElementById(
-    "status"
-    );
+        let status =
+        data.status ?? "Normal Risk";
 
-    statusElement.className =
-    "value";
+        let time =
+        data.time ?? "--:--";
 
-    if(data.status ==
-    "Normal Risk"){
+        document.getElementById(
+        "rainfall").innerHTML =
+        rainfall;
 
-        statusElement.classList
-        .add("normal");
+        document.getElementById(
+        "risk").innerHTML =
+        risk + "%";
+
+        document.getElementById(
+        "status").innerHTML =
+        status;
+
+        document.getElementById(
+        "time").innerHTML =
+        time;
+
+        /* STATUS COLOR */
+
+        let statusElement =
+        document.getElementById(
+        "status"
+        );
+
+        statusElement.className =
+        "value";
+
+        if(status ==
+        "Normal Risk"){
+
+            statusElement.classList
+            .add("normal");
+        }
+
+        else if(status ==
+        "Average Risk"){
+
+            statusElement.classList
+            .add("average");
+        }
+
+        else if(status ==
+        "High Risk"){
+
+            statusElement.classList
+            .add("high");
+        }
+
+        else{
+
+            statusElement.classList
+            .add("extreme");
+        }
+
+        /* ALERT BANNER */
+
+        let banner =
+        document.getElementById(
+        "alertBanner"
+        );
+
+        if(risk >= 95){
+
+            banner.style.display =
+            "block";
+        }
+
+        else{
+
+            banner.style.display =
+            "none";
+        }
+
+        /* GRAPH UPDATE */
+
+        rainfallHistory.push(
+        rainfall
+        );
+
+        timeHistory.push(
+        time
+        );
+
+        if(rainfallHistory.length > 10){
+
+            rainfallHistory.shift();
+
+            timeHistory.shift();
+        }
+
+        rainChart.update();
+
     }
 
-    else if(data.status ==
-    "Average Risk"){
+    catch(error){
 
-        statusElement.classList
-        .add("average");
+        console.log(error);
+
+        document.getElementById(
+        "rainfall").innerHTML = 0;
+
+        document.getElementById(
+        "risk").innerHTML = "0%";
+
+        document.getElementById(
+        "status").innerHTML =
+        "Server Error";
+
+        document.getElementById(
+        "time").innerHTML =
+        "--:--";
     }
-
-    else if(data.status ==
-    "High Risk"){
-
-        statusElement.classList
-        .add("high");
-    }
-
-    else{
-
-        statusElement.classList
-        .add("extreme");
-    }
-
-    let banner =
-    document.getElementById(
-    "alertBanner"
-    );
-
-    if(data.risk >= 95){
-
-        banner.style.display =
-        "block";
-    }
-
-    else{
-
-        banner.style.display =
-        "none";
-    }
-
-    rainfallHistory.push(
-    data.rainfall
-    );
-
-    timeHistory.push(
-    data.time
-    );
-
-    if(rainfallHistory.length > 10){
-
-        rainfallHistory.shift();
-
-        timeHistory.shift();
-    }
-
-    rainChart.update();
 }
 
 fetchData();
