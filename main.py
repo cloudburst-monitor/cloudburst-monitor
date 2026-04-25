@@ -1,442 +1,175 @@
-<!-- =========================
-dashboard.html
-========================= -->
+# =========================
+# main.py
+# =========================
 
-<!DOCTYPE html>
-<html lang="en">
+from flask import Flask, jsonify, send_from_directory
+import serial
+import threading
+import time
+import os
+import numpy as np
+import joblib
 
-<head>
+app = Flask(__name__)
 
-<meta charset="UTF-8">
+# =========================
+# LOAD ML MODEL
+# =========================
 
-<meta name="viewport"
-content="width=device-width, initial-scale=1.0">
+model = joblib.load("model.pkl")
 
-<title>Cloudburst Monitoring System</title>
+# =========================
+# SERIAL CONNECTION
+# =========================
 
-<link rel="stylesheet"
-href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+try:
+    arduino = serial.Serial('COM6', 115200, timeout=1)
+    time.sleep(2)
+    print("✅ ESP32 Connected")
 
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+except Exception as e:
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    arduino = None
+    print("❌ ESP32 NOT connected:", e)
 
-<style>
+# =========================
+# GLOBAL VARIABLES
+# =========================
 
-body{
+last_rain_value = 0
+last_score = 0
+last_risk = "Normal"
 
-    margin:0;
-    font-family:'Segoe UI',sans-serif;
-    background:#071421;
-    color:white;
+# =========================
+# RISK MAP
+# =========================
+
+risk_map = {
+
+    0: ("Normal", 20),
+
+    1: ("Risk", 65),
+
+    2: ("High Risk", 95)
 }
 
-.header{
+# =========================
+# SENSOR LOOP
+# =========================
 
-    text-align:center;
-    padding:18px;
-    font-size:28px;
-    font-weight:bold;
-    background:#10263d;
-}
+def sensor_loop():
 
-.alert-bar{
+    global last_rain_value
+    global last_score
+    global last_risk
 
-    display:none;
-    background:red;
-    text-align:center;
-    padding:12px;
-    font-weight:bold;
-}
+    while True:
 
-#map{
+        if arduino:
 
-    height:350px;
-    width:95%;
-    margin:15px auto;
-    border-radius:12px;
-}
+            try:
 
-.location{
+                if arduino.in_waiting > 0:
 
-    text-align:center;
-    color:#bbbbbb;
-}
+                    value = arduino.readline().decode(
+                        errors='ignore'
+                    ).strip()
 
-.cards{
+                    if value.isdigit():
 
-    display:flex;
-    justify-content:space-between;
-    gap:15px;
-    margin:20px;
-    flex-wrap:wrap;
-}
+                        rain_raw = int(value)
 
-.card{
+                        rainfall = max(
+                            0,
+                            rain_raw * 0.03
+                        )
 
-    flex:1;
-    min-width:180px;
+                        if rainfall > 1:
 
-    background:#112b45;
+                            # SMOOTHING
+                            last_rain_value = round(
 
-    padding:18px;
+                                (last_rain_value * 0.7) +
 
-    border-radius:12px;
+                                (rainfall * 0.3),
 
-    text-align:center;
-}
+                                2
+                            )
 
-.card p{
+                            # CONVERT TO %
+                            rain_percent = min(
 
-    font-size:26px;
-    font-weight:bold;
-}
+                                100,
 
-.normal{
+                                (last_rain_value / 120) * 100
+                            )
 
-    color:#00ff88;
-}
+                            # ML PREDICTION
+                            prediction = model.predict(
 
-.risk{
+                                np.array([[rain_percent]])
 
-    color:orange;
-}
+                            )[0]
 
-.high{
+                            last_risk, last_score = risk_map[prediction]
 
-    color:red;
-}
+            except Exception as e:
 
-.alerts{
+                print(e)
 
-    margin:20px;
-}
+        time.sleep(0.1)
 
-.alert-item{
+# =========================
+# START THREAD
+# =========================
 
-    background:#132f4c;
-    padding:12px;
-    border-radius:10px;
-    margin-bottom:10px;
+threading.Thread(
 
-    display:flex;
-    justify-content:space-between;
-}
+    target=sensor_loop,
+    daemon=True
 
-canvas{
+).start()
 
-    background:#112b45;
-    border-radius:12px;
-    padding:10px;
-}
+# =========================
+# HOME ROUTE
+# =========================
 
-</style>
-</head>
+@app.route("/")
+def home():
 
-<body>
+    return send_from_directory(
+        ".",
+        "dashboard.html"
+    )
 
-<div class="header">
+# =========================
+# DATA API
+# =========================
 
-☁ AI Cloudburst Monitoring Dashboard
+@app.route("/data")
+def data():
 
-</div>
+    return jsonify({
 
-<div class="alert-bar" id="alertBar">
+        "rainfall": round(last_rain_value, 2),
 
-⚠ HIGH RISK ALERT ⚠
+        "score": last_score,
 
-</div>
+        "risk": last_risk,
 
-<div id="map"></div>
+        "timestamp": time.strftime("%H:%M:%S")
 
-<div class="location" id="locationText">
+    })
 
-Detecting location...
+# =========================
+# RUN SERVER
+# =========================
 
-</div>
+if __name__ == "__main__":
 
-<div class="cards">
+    app.run(
 
-    <div class="card">
-
-        Rainfall
-
-        <p id="rain">0</p>
-
-    </div>
-
-    <div class="card">
-
-        AI Risk %
-
-        <p id="risk">0%</p>
-
-    </div>
-
-    <div class="card">
-
-        Status
-
-        <p id="status">Normal</p>
-
-    </div>
-
-    <div class="card">
-
-        Time
-
-        <p id="time">--</p>
-
-    </div>
-
-</div>
-
-<div style="width:90%; margin:auto;">
-
-    <canvas id="rainChart"></canvas>
-
-</div>
-
-<div class="alerts">
-
-    <h2>⚠ Active Alerts</h2>
-
-    <div id="alertList"></div>
-
-</div>
-
-<script>
-
-
-
-// =========================
-// MAP
-// =========================
-
-let map = L.map('map').setView(
-    [30.7333,76.7794],
-    13
-);
-
-L.tileLayer(
-
-'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
-
-).addTo(map);
-
-let userMarker = L.marker(
-    [30.7333,76.7794]
-).addTo(map);
-
-navigator.geolocation.getCurrentPosition(
-
-async(pos)=>{
-
-    let lat = pos.coords.latitude;
-    let lon = pos.coords.longitude;
-
-    map.setView([lat,lon],13);
-
-    userMarker.setLatLng([lat,lon]);
-
-    let res = await fetch(
-
-`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`
-
-    );
-
-    let data = await res.json();
-
-    document.getElementById(
-        "locationText"
-    ).innerText = data.display_name;
-});
-
-
-
-// =========================
-// CHART
-// =========================
-
-let rainData = [];
-let labels = [];
-
-const ctx = document
-.getElementById("rainChart")
-.getContext("2d");
-
-const rainChart = new Chart(ctx, {
-
-    type:"line",
-
-    data:{
-
-        labels:labels,
-
-        datasets:[{
-
-            label:"Rainfall Trend",
-
-            data:rainData,
-
-            borderColor:"cyan",
-
-            backgroundColor:
-            "rgba(0,255,255,0.1)",
-
-            fill:true,
-
-            tension:0.4
-        }]
-    },
-
-    options:{
-
-        responsive:true,
-
-        plugins:{
-
-            legend:{
-
-                labels:{
-                    color:"white"
-                }
-            }
-        },
-
-        scales:{
-
-            x:{
-                ticks:{
-                    color:"white"
-                }
-            },
-
-            y:{
-                ticks:{
-                    color:"white"
-                },
-
-                beginAtZero:true
-            }
-        }
-    }
-});
-
-
-
-// =========================
-// FETCH API DATA
-// =========================
-
-async function fetchData(){
-
-    try{
-
-        const response = await fetch("/data");
-
-        const data = await response.json();
-
-        document.getElementById(
-            "rain"
-        ).innerText = data.rainfall;
-
-        document.getElementById(
-            "risk"
-        ).innerText = data.score + "%";
-
-        document.getElementById(
-            "time"
-        ).innerText = data.timestamp;
-
-        let status =
-        document.getElementById("status");
-
-        status.innerText = data.risk;
-
-        status.className = "";
-
-        if(data.risk === "Normal"){
-
-            status.classList.add("normal");
-
-            document.getElementById(
-                "alertBar"
-            ).style.display = "none";
-        }
-
-        else if(data.risk === "Risk"){
-
-            status.classList.add("risk");
-
-            document.getElementById(
-                "alertBar"
-            ).style.display = "none";
-        }
-
-        else{
-
-            status.classList.add("high");
-
-            document.getElementById(
-                "alertBar"
-            ).style.display = "block";
-        }
-
-        // UPDATE GRAPH
-
-        rainData.push(data.rainfall);
-
-        labels.push(data.timestamp);
-
-        if(rainData.length > 15){
-
-            rainData.shift();
-            labels.shift();
-        }
-
-        rainChart.data.labels = labels;
-
-        rainChart.data.datasets[0].data =
-        rainData;
-
-        rainChart.update();
-
-        // ALERTS
-
-        let html = `
-
-        <div class="alert-item">
-
-            <span>📍 Local Sensor Node</span>
-
-            <span>${data.risk}</span>
-
-            <span>${data.timestamp}</span>
-
-        </div>
-
-        `;
-
-        document.getElementById(
-            "alertList"
-        ).innerHTML = html;
-
-    }
-
-    catch(error){
-
-        console.log(error);
-    }
-}
-
-// AUTO UPDATE
-
-setInterval(fetchData,1000);
-
-fetchData();
-
-</script>
-
-</body>
-</html>
+        host="0.0.0.0",
+        port=10000,
+        debug=True
+    )
