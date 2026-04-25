@@ -15,8 +15,6 @@ href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
 rel="stylesheet">
 
@@ -37,7 +35,7 @@ body{
     180deg,
     #02111f,
     #062540,
-    #031321
+    #041a2d
     );
 
     color:white;
@@ -45,20 +43,22 @@ body{
     overflow-x:hidden;
 }
 
-/* ---------------- HEADER ---------------- */
+/* -----------------------------
+HEADER
+----------------------------- */
 
 .header{
 
     width:100%;
 
-    padding:16px;
+    padding:25px;
 
     text-align:center;
 
+    backdrop-filter:blur(10px);
+
     background:
     rgba(255,255,255,0.03);
-
-    backdrop-filter:blur(12px);
 
     border-bottom:
     1px solid rgba(255,255,255,0.08);
@@ -66,33 +66,37 @@ body{
 
 .header h1{
 
-    font-size:40px;
+    font-size:42px;
 
     font-weight:700;
+
+    letter-spacing:1px;
 }
 
 .header p{
 
-    margin-top:5px;
+    margin-top:8px;
 
     opacity:0.8;
+
+    font-size:16px;
 }
 
-/* ---------------- ALERT ---------------- */
+/* -----------------------------
+ALERT BANNER
+----------------------------- */
 
 #alertBanner{
 
     width:92%;
 
-    margin:12px auto;
+    margin:20px auto;
 
-    padding:12px;
+    padding:18px;
 
-    border-radius:14px;
+    border-radius:18px;
 
-    text-align:center;
-
-    font-size:22px;
+    font-size:28px;
 
     font-weight:700;
 
@@ -100,8 +104,7 @@ body{
 
     animation:blink 1s infinite;
 
-    box-shadow:
-    0 0 20px red;
+    box-shadow:0 0 25px red;
 }
 
 @keyframes blink{
@@ -111,62 +114,68 @@ body{
     }
 }
 
-/* ---------------- MAIN ---------------- */
+/* -----------------------------
+MAP
+----------------------------- */
 
-.main-container{
+.map-container{
 
     width:92%;
 
     margin:auto;
 
-    margin-top:12px;
+    margin-top:20px;
 }
-
-/* ---------------- MAP ---------------- */
 
 #map{
 
-    height:250px;
+    height:450px;
 
-    border-radius:22px;
+    border-radius:24px;
 
     overflow:hidden;
 
     box-shadow:
-    0 8px 30px rgba(0,0,0,0.45);
+    0 10px 35px rgba(0,0,0,0.5);
 }
 
-/* ---------------- CARDS ---------------- */
+/* -----------------------------
+CARDS
+----------------------------- */
 
 .cards{
 
-    margin-top:16px;
+    width:92%;
+
+    margin:auto;
+
+    margin-top:30px;
 
     display:grid;
 
     grid-template-columns:
-    repeat(4,1fr);
+    repeat(auto-fit,minmax(220px,1fr));
 
-    gap:16px;
+    gap:20px;
 }
 
 .card{
 
-    background:
-    rgba(255,255,255,0.05);
-
-    border:
-    1px solid rgba(255,255,255,0.08);
-
-    border-radius:22px;
-
-    padding:20px;
-
-    backdrop-filter:blur(14px);
-
     position:relative;
 
     overflow:hidden;
+
+    padding:28px;
+
+    border-radius:24px;
+
+    background:
+    rgba(255,255,255,0.05);
+
+    backdrop-filter:blur(12px);
+
+    border:
+    1px solid rgba(255,255,255,0.08);
 
     transition:0.35s;
 }
@@ -174,10 +183,10 @@ body{
 .card:hover{
 
     transform:
-    translateY(-5px);
+    translateY(-8px);
 
     box-shadow:
-    0 10px 25px rgba(0,0,0,0.35);
+    0 10px 30px rgba(0,0,0,0.45);
 }
 
 .card::before{
@@ -186,33 +195,39 @@ body{
 
     position:absolute;
 
-    width:120px;
-    height:120px;
+    width:140px;
+    height:140px;
+
+    background:
+    rgba(255,255,255,0.06);
 
     border-radius:50%;
 
-    background:
-    rgba(255,255,255,0.04);
-
-    top:-40px;
+    top:-50px;
     right:-40px;
 }
 
 .card h2{
 
-    font-size:19px;
+    font-size:20px;
 
-    margin-bottom:12px;
+    font-weight:500;
+
+    opacity:0.9;
 }
 
 .value{
+
+    margin-top:18px;
 
     font-size:38px;
 
     font-weight:700;
 }
 
-/* ---------------- STATUS COLORS ---------------- */
+/* -----------------------------
+STATUS COLORS
+----------------------------- */
 
 .normal{
     color:#00ff88;
@@ -223,146 +238,54 @@ body{
 }
 
 .high{
-    color:#ff9900;
+    color:#ff8800;
 }
 
 .extreme{
     color:#ff3b3b;
 }
 
-/* ---------------- BOTTOM SECTION ---------------- */
-
-.bottom-section{
-
-    margin-top:18px;
-
-    display:grid;
-
-    grid-template-columns:
-    2fr 1fr;
-
-    gap:16px;
-}
-
-/* ---------------- GRAPH ---------------- */
-
-.graph-card{
-
-    background:
-    rgba(255,255,255,0.05);
-
-    border:
-    1px solid rgba(255,255,255,0.08);
-
-    border-radius:22px;
-
-    padding:20px;
-
-    backdrop-filter:blur(14px);
-}
-
-.graph-card h2{
-
-    margin-bottom:15px;
-}
-
-/* ---------------- ALERTS ---------------- */
-
-.alert-card{
-
-    background:
-    rgba(255,255,255,0.05);
-
-    border:
-    1px solid rgba(255,255,255,0.08);
-
-    border-radius:22px;
-
-    padding:20px;
-
-    backdrop-filter:blur(14px);
-}
-
-.alert-card h2{
-
-    margin-bottom:14px;
-}
-
-.alert-item{
-
-    padding:12px;
-
-    margin-bottom:12px;
-
-    border-radius:12px;
-
-    background:
-    rgba(255,255,255,0.05);
-
-    font-size:14px;
-}
-
-.active{
-    border-left:5px solid #00ff88;
-}
-
-.warning{
-    border-left:5px solid #ff9900;
-}
-
-.danger{
-    border-left:5px solid #ff3b3b;
-}
-
-/* ---------------- FOOTER ---------------- */
+/* -----------------------------
+FOOTER
+----------------------------- */
 
 .footer{
 
-    margin-top:20px;
+    margin-top:35px;
+
+    padding:25px;
 
     text-align:center;
 
-    padding-bottom:20px;
-
     opacity:0.7;
+
+    font-size:15px;
 }
 
-/* ---------------- RESPONSIVE ---------------- */
+/* -----------------------------
+RESPONSIVE
+----------------------------- */
 
-@media(max-width:1000px){
-
-    .cards{
-
-        grid-template-columns:
-        repeat(2,1fr);
-    }
-
-    .bottom-section{
-
-        grid-template-columns:1fr;
-    }
-}
-
-@media(max-width:700px){
-
-    .cards{
-
-        grid-template-columns:1fr;
-    }
+@media(max-width:768px){
 
     .header h1{
 
-        font-size:28px;
+        font-size:30px;
     }
 
     #map{
 
-        height:220px;
+        height:350px;
     }
 
     .value{
 
         font-size:30px;
+    }
+
+    #alertBanner{
+
+        font-size:22px;
     }
 }
 
@@ -372,7 +295,9 @@ body{
 
 <body>
 
-<!-- HEADER -->
+<!-- -----------------------------
+HEADER
+------------------------------ -->
 
 <div class="header">
 
@@ -384,111 +309,75 @@ body{
 
 </div>
 
-<!-- ALERT BANNER -->
+<!-- -----------------------------
+ALERT BANNER
+------------------------------ -->
 
 <div id="alertBanner"></div>
 
-<!-- MAIN -->
+<!-- -----------------------------
+MAP
+------------------------------ -->
 
-<div class="main-container">
-
-    <!-- MAP -->
+<div class="map-container">
 
     <div id="map"></div>
 
-    <!-- CARDS -->
+</div>
 
-    <div class="cards">
+<!-- -----------------------------
+CARDS
+------------------------------ -->
 
-        <div class="card">
+<div class="cards">
 
-            <h2>🌧 Rainfall</h2>
+    <div class="card">
 
-            <div class="value"
-            id="rainfall">
+        <h2>🌧 Rainfall</h2>
 
-            0
+        <div class="value"
+        id="rainfall">
 
-            </div>
-
-        </div>
-
-        <div class="card">
-
-            <h2>🧠 AI Risk</h2>
-
-            <div class="value"
-            id="risk">
-
-            0%
-
-            </div>
-
-        </div>
-
-        <div class="card">
-
-            <h2>⚠ Status</h2>
-
-            <div class="value"
-            id="status">
-
-            Normal
-
-            </div>
-
-        </div>
-
-        <div class="card">
-
-            <h2>🕒 Time</h2>
-
-            <div class="value"
-            id="time">
-
-            --:--
-
-            </div>
+        0
 
         </div>
 
     </div>
 
-    <!-- BOTTOM -->
+    <div class="card">
 
-    <div class="bottom-section">
+        <h2>🧠 AI Risk</h2>
 
-        <!-- GRAPH -->
+        <div class="value"
+        id="risk">
 
-        <div class="graph-card">
-
-            <h2>📈 Rainfall Trend</h2>
-
-            <canvas id="rainChart"></canvas>
+        0%
 
         </div>
 
-        <!-- ACTIVE ALERTS -->
+    </div>
 
-        <div class="alert-card">
+    <div class="card">
 
-            <h2>🚨 Active Node Alerts</h2>
+        <h2>⚠ Status</h2>
 
-            <div class="alert-item active">
-                Node A1 • Sensor Active
-            </div>
+        <div class="value"
+        id="status">
 
-            <div class="alert-item warning">
-                Node B4 • Heavy Rainfall Detected
-            </div>
+        Normal
 
-            <div class="alert-item danger">
-                Node C2 • Flood Risk Increasing
-            </div>
+        </div>
 
-            <div class="alert-item active">
-                Node D7 • Monitoring Online
-            </div>
+    </div>
+
+    <div class="card">
+
+        <h2>🕒 Time</h2>
+
+        <div class="value"
+        id="time">
+
+        --:--
 
         </div>
 
@@ -496,13 +385,17 @@ body{
 
 </div>
 
-<!-- FOOTER -->
+<!-- -----------------------------
+FOOTER
+------------------------------ -->
 
 <div class="footer">
 
 AI-Powered Hyperlocal Climate Intelligence Platform
 
 </div>
+
+<!-- REPLACE ONLY THIS SCRIPT PART -->
 
 <script>
 
@@ -524,6 +417,12 @@ var marker = L.marker(
     [30.7046,76.7179]
 ).addTo(map);
 
+/* ---------------- GRAPH DATA ---------------- */
+
+let rainfallHistory = [];
+
+let timeHistory = [];
+
 /* ---------------- CHART ---------------- */
 
 const ctx =
@@ -538,20 +437,13 @@ new Chart(ctx,{
 
     data:{
 
-        labels:[
-        '10 AM',
-        '11 AM',
-        '12 PM',
-        '1 PM',
-        '2 PM',
-        '3 PM'
-        ],
+        labels:timeHistory,
 
         datasets:[{
 
             label:'Rainfall',
 
-            data:[5,15,22,38,50,70],
+            data:rainfallHistory,
 
             borderColor:'#00c3ff',
 
@@ -560,7 +452,9 @@ new Chart(ctx,{
 
             fill:true,
 
-            tension:0.4
+            tension:0.4,
+
+            pointRadius:4
         }]
     },
 
@@ -588,7 +482,9 @@ new Chart(ctx,{
             y:{
                 ticks:{
                     color:'white'
-                }
+                },
+
+                beginAtZero:true
             }
         }
     }
@@ -603,6 +499,8 @@ async function fetchData(){
 
     let data =
     await response.json();
+
+    /* ---------------- VALUES ---------------- */
 
     document.getElementById(
     "rainfall").innerHTML =
@@ -620,7 +518,7 @@ async function fetchData(){
     "time").innerHTML =
     data.time;
 
-    /* STATUS COLOR */
+    /* ---------------- STATUS COLOR ---------------- */
 
     let statusElement =
     document.getElementById(
@@ -657,7 +555,7 @@ async function fetchData(){
         .add("extreme");
     }
 
-    /* EXTREME ALERT */
+    /* ---------------- ALERT ---------------- */
 
     let banner =
     document.getElementById(
@@ -682,13 +580,36 @@ async function fetchData(){
         "none";
     }
 
-    /* MAP */
+    /* ---------------- MAP UPDATE ---------------- */
 
     marker.setLatLng([
         data.lat,
         data.lon
     ]);
+
+    /* ---------------- REAL GRAPH UPDATE ---------------- */
+
+    rainfallHistory.push(
+    data.rainfall
+    );
+
+    timeHistory.push(
+    data.time
+    );
+
+    /* only last 10 values */
+
+    if(rainfallHistory.length > 10){
+
+        rainfallHistory.shift();
+
+        timeHistory.shift();
+    }
+
+    rainChart.update();
 }
+
+/* ---------------- AUTO REFRESH ---------------- */
 
 fetchData();
 
