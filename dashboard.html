@@ -318,6 +318,51 @@ canvas{
     font-size:14px;
 }
 
+/* FEEDBACK BUTTON */
+
+.feedback-btn{
+
+    position:fixed;
+
+    right:22px;
+
+    bottom:22px;
+
+    background:
+    linear-gradient(
+    135deg,
+    #00c6ff,
+    #0072ff
+    );
+
+    color:white;
+
+    padding:14px 22px;
+
+    border-radius:50px;
+
+    text-decoration:none;
+
+    font-size:14px;
+
+    font-weight:700;
+
+    box-shadow:
+    0 8px 25px rgba(0,0,0,0.4);
+
+    z-index:9999;
+
+    transition:0.3s;
+}
+
+.feedback-btn:hover{
+
+    transform:translateY(-4px);
+
+    box-shadow:
+    0 12px 35px rgba(0,198,255,0.5);
+}
+
 /* MOBILE */
 
 @media(max-width:1000px){
@@ -489,6 +534,16 @@ AI-Powered Hyperlocal Climate Intelligence Platform
 
 </div>
 
+<!-- FEEDBACK BUTTON -->
+
+<a href="https://docs.google.com/forms/d/e/1FAIpQLSf31qzXdg2mxO-cGNvC_d2wldAuop52aPA8zcCFrWSnKpGWbQ/viewform?usp=header"
+target="_blank"
+class="feedback-btn">
+
+💬 Send Field Report
+
+</a>
+
 <script>
 
 /* MAP */
@@ -518,13 +573,9 @@ async function(position){
     let lat = position.coords.latitude;
     let lon = position.coords.longitude;
 
-    /* UPDATE MAP */
-
     marker.setLatLng([lat, lon]);
 
     map.setView([lat, lon], 12);
-
-    /* GET PLACE NAME */
 
     try{
 
@@ -673,8 +724,6 @@ async function fetchData(){
     "time").innerHTML =
     data.time;
 
-    /* STATUS COLOR */
-
     let statusElement =
     document.getElementById(
     "status"
@@ -710,8 +759,6 @@ async function fetchData(){
         .add("extreme");
     }
 
-    /* EXTREME ALERT */
-
     let banner =
     document.getElementById(
     "alertBanner"
@@ -728,8 +775,6 @@ async function fetchData(){
         banner.style.display =
         "none";
     }
-
-    /* GRAPH */
 
     rainfallHistory.push(
     data.rainfall
