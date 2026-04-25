@@ -49,20 +49,20 @@ body{
 .header{
 
     text-align:center;
-    padding:18px;
+    padding:16px;
 }
 
 .header h1{
 
-    font-size:48px;
+    font-size:38px;
     font-weight:800;
 }
 
 .header p{
 
-    margin-top:8px;
+    margin-top:6px;
     color:#d6e2f0;
-    font-size:16px;
+    font-size:15px;
 }
 
 /* ALERT */
@@ -77,7 +77,7 @@ body{
 
     padding:10px;
 
-    font-size:18px;
+    font-size:17px;
 
     font-weight:bold;
 
@@ -97,11 +97,11 @@ body{
 
     width:92%;
 
-    height:250px;
+    height:180px;
 
-    margin:18px auto;
+    margin:14px auto;
 
-    border-radius:24px;
+    border-radius:22px;
 
     overflow:hidden;
 
@@ -112,20 +112,37 @@ body{
     0 8px 25px rgba(0,0,0,0.4);
 }
 
+/* LIVE LOCATION */
+
+#liveLocation{
+
+    width:92%;
+
+    margin:auto;
+
+    margin-top:-5px;
+
+    color:#dcefff;
+
+    font-size:15px;
+
+    padding-left:6px;
+}
+
 /* CARDS */
 
 .cards{
 
     width:92%;
 
-    margin:18px auto;
+    margin:16px auto;
 
     display:grid;
 
     grid-template-columns:
     repeat(4,1fr);
 
-    gap:16px;
+    gap:14px;
 }
 
 .card{
@@ -133,11 +150,11 @@ body{
     background:
     rgba(255,255,255,0.07);
 
-    border-radius:22px;
+    border-radius:20px;
 
-    padding:18px;
+    padding:14px;
 
-    min-height:135px;
+    min-height:105px;
 
     backdrop-filter:blur(12px);
 
@@ -155,28 +172,28 @@ body{
 
     position:absolute;
 
-    width:90px;
-    height:90px;
+    width:80px;
+    height:80px;
 
     background:
     rgba(255,255,255,0.05);
 
     border-radius:50%;
 
-    top:-25px;
-    right:-25px;
+    top:-20px;
+    right:-20px;
 }
 
 .card h2{
 
-    font-size:18px;
+    font-size:15px;
 
-    margin-bottom:20px;
+    margin-bottom:16px;
 }
 
 .value{
 
-    font-size:34px;
+    font-size:22px;
 
     font-weight:700;
 }
@@ -205,14 +222,14 @@ body{
 
     width:92%;
 
-    margin:22px auto;
+    margin:18px auto;
 
     background:
     rgba(255,255,255,0.07);
 
-    border-radius:24px;
+    border-radius:22px;
 
-    padding:20px;
+    padding:18px;
 
     box-shadow:
     0 8px 25px rgba(0,0,0,0.35);
@@ -220,14 +237,14 @@ body{
 
 .graph-title{
 
-    font-size:24px;
+    font-size:20px;
 
-    margin-bottom:16px;
+    margin-bottom:12px;
 }
 
 canvas{
 
-    max-height:260px;
+    max-height:180px;
 }
 
 /* NODE ALERTS */
@@ -236,14 +253,14 @@ canvas{
 
     width:92%;
 
-    margin:22px auto;
+    margin:18px auto;
 
     background:
     rgba(255,255,255,0.07);
 
-    border-radius:24px;
+    border-radius:22px;
 
-    padding:20px;
+    padding:18px;
 
     box-shadow:
     0 8px 25px rgba(0,0,0,0.35);
@@ -251,7 +268,9 @@ canvas{
 
 .node-alerts h2{
 
-    margin-bottom:16px;
+    margin-bottom:14px;
+
+    font-size:20px;
 }
 
 .node{
@@ -259,17 +278,19 @@ canvas{
     background:
     rgba(255,255,255,0.06);
 
-    padding:14px;
+    padding:12px;
 
     border-radius:14px;
 
-    margin-bottom:12px;
+    margin-bottom:10px;
 
     display:flex;
 
     justify-content:space-between;
 
     align-items:center;
+
+    font-size:14px;
 }
 
 .active{
@@ -290,9 +311,11 @@ canvas{
 
     text-align:center;
 
-    padding:24px;
+    padding:20px;
 
     color:#d6e2f0;
+
+    font-size:14px;
 }
 
 /* MOBILE */
@@ -315,12 +338,12 @@ canvas{
 
     #map{
 
-        height:220px;
+        height:200px;
     }
 
     .header h1{
 
-        font-size:28px;
+        font-size:26px;
     }
 }
 
@@ -346,7 +369,19 @@ Real-Time Hyperlocal Disaster Monitoring Dashboard
 
 </div>
 
+<!-- MAP -->
+
 <div id="map"></div>
+
+<!-- LIVE LOCATION -->
+
+<div id="liveLocation">
+
+📍 Fetching live location...
+
+</div>
+
+<!-- CARDS -->
 
 <div class="cards">
 
@@ -506,7 +541,11 @@ new Chart(ctx,{
 
             fill:true,
 
-            tension:0.4
+            tension:0.5,
+
+            pointRadius:4,
+
+            borderWidth:3
         }]
     },
 
@@ -566,6 +605,14 @@ async function fetchData(){
     "time").innerHTML =
     data.time;
 
+    /* LIVE LOCATION */
+
+    document.getElementById(
+    "liveLocation"
+    ).innerHTML =
+
+    "📍 " + data.location;
+
     /* STATUS COLOR */
 
     let statusElement =
@@ -591,7 +638,7 @@ async function fetchData(){
     }
 
     else if(data.status ==
-    "high risk"){
+    "High Risk"){
 
         statusElement.classList
         .add("high");
@@ -628,6 +675,11 @@ async function fetchData(){
         data.lat,
         data.lon
     ]);
+
+    map.setView([
+        data.lat,
+        data.lon
+    ],11);
 
     /* GRAPH */
 
