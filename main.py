@@ -44,7 +44,7 @@ def receive_data():
         # -----------------------------
         # SENSOR CONVERSION
         # -----------------------------
-        rainfall = int((4095 - raw_value) / 40)
+        rainfall = int(raw_value / 40)
 
         if rainfall < 0:
             rainfall = 0
@@ -73,14 +73,6 @@ def receive_data():
             status = "Extreme Danger"
 
         # -----------------------------
-        # LIVE LOCATION
-        # -----------------------------
-        lat = 30.7046
-        lon = 76.7179
-
-        location = f"Lat: {lat:.4f}, Lon: {lon:.4f}"
-
-        # -----------------------------
         # INDIAN TIME
         # -----------------------------
         india = pytz.timezone("Asia/Kolkata")
@@ -98,9 +90,8 @@ def receive_data():
             "risk": risk,
             "status": status,
             "time": current_time,
-            "lat": lat,
-            "lon": lon,
-            "location": location
+            "lat": 30.7046,
+            "lon": 76.7179
         }
 
         # -----------------------------
@@ -110,13 +101,10 @@ def receive_data():
             json.dump(final_data, f)
 
         return jsonify({
-
             "message": "success",
             "rainfall": rainfall,
             "risk": risk,
-            "status": status,
-            "location": location
-
+            "status": status
         }), 200
 
     except Exception as e:
@@ -148,9 +136,7 @@ def get_data():
             "status": "No Data",
             "time": "--:--",
             "lat": 30.7046,
-            "lon": 76.7179,
-            "location": "Lat: 30.7046, Lon: 76.7179"
-
+            "lon": 76.7179
         })
 
 
