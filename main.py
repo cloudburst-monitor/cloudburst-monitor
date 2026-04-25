@@ -25,18 +25,27 @@ def home():
     return dashboard()
 
 # -----------------------------
-# RECEIVE SENSOR DATA FROM ESP32
+# RECEIVE SENSOR DATA
 # -----------------------------
 @app.route("/data", methods=["POST"])
 def receive_data():
 
     try:
+
         data = request.get_json()
 
-        rainfall = data.get("rainfall", 0)
+        raw_value = data.get("rainfall", 0)
 
         # -----------------------------
-        # UPDATED AI RISK LOGIC
+        # SENSOR VALUE CONVERSION
+        # -----------------------------
+        rainfall = int((4095 - raw_value) / 40)
+
+        if rainfall < 0:
+            rainfall = 0
+
+        # -----------------------------
+        # AI RISK LOGIC
         # -----------------------------
         if rainfall <= 20:
             risk = 15
@@ -58,12 +67,16 @@ def receive_data():
         # INDIAN TIME
         # -----------------------------
         india = pytz.timezone("Asia/Kolkata")
-        current_time = datetime.now(india).strftime("%I:%M:%S %p")
+
+        current_time = datetime.now(india).strftime(
+            "%I:%M:%S %p"
+        )
 
         # -----------------------------
-        # FINAL DATA
+        # SAVE DATA
         # -----------------------------
         final_data = {
+
             "rainfall": rainfall,
             "risk": risk,
             "status": status,
@@ -76,24 +89,24 @@ def receive_data():
             json.dump(final_data, f)
 
         return jsonify({
-            "message": "Data received successfully",
-            "risk": risk,
-            "status": status
+            "message": "success"
         }), 200
 
     except Exception as e:
+
         return jsonify({
             "error": str(e)
         }), 500
 
 
 # -----------------------------
-# GET DATA FOR DASHBOARD
+# GET DATA
 # -----------------------------
 @app.route("/getdata")
 def get_data():
 
     try:
+
         with open(DATA_FILE, "r") as f:
             data = json.load(f)
 
@@ -102,10 +115,11 @@ def get_data():
     except:
 
         return jsonify({
+
             "rainfall": 0,
             "risk": 0,
             "status": "No Data",
-            "time": "--:--:--",
+            "time": "--:--",
             "lat": 30.7046,
             "lon": 76.7179
         })
@@ -124,15 +138,17 @@ def dashboard():
 
 <head>
 
-    <title>AI Cloudburst EWS</title>
+<title>AI Cloudburst EWS</title>
 
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
 
-    <link rel="stylesheet"
-    href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
 
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<link rel="stylesheet"
+href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <style>
 
@@ -145,34 +161,50 @@ body{
 }
 
 h1{
-    padding:25px;
-    font-size:42px;
+    padding:20px;
+    font-size:38px;
+}
+
+#alertBanner{
+    width:92%;
+    margin:auto;
+    margin-bottom:15px;
+    padding:14px;
+    border-radius:14px;
+    font-size:26px;
     font-weight:bold;
+    display:none;
+    animation: blink 1s infinite;
+}
+
+@keyframes blink{
+    50%{
+        opacity:0.5;
+    }
 }
 
 #map{
-    height:420px;
+    height:400px;
     width:92%;
     margin:auto;
-    border-radius:20px;
+    border-radius:18px;
     overflow:hidden;
     box-shadow:0 0 25px rgba(0,0,0,0.5);
 }
 
 .cards{
     display:flex;
-    flex-wrap:wrap;
     justify-content:center;
-    margin-top:25px;
-    margin-bottom:30px;
+    flex-wrap:wrap;
+    margin-top:20px;
 }
 
 .card{
-    background: linear-gradient(145deg,#0b2d4d,#123d63);
-    margin:15px;
-    padding:30px;
-    border-radius:20px;
-    width:240px;
+    background:linear-gradient(145deg,#0b2d4d,#123d63);
+    width:180px;
+    margin:12px;
+    padding:20px;
+    border-radius:18px;
     box-shadow:0 8px 25px rgba(0,0,0,0.4);
     transition:0.3s;
 }
@@ -182,19 +214,19 @@ h1{
 }
 
 .card h2{
+    font-size:22px;
     margin:0;
-    font-size:24px;
 }
 
 .value{
-    font-size:42px;
+    font-size:30px;
     font-weight:bold;
-    margin-top:20px;
+    margin-top:18px;
 }
 
 .footer{
-    margin-top:20px;
-    padding-bottom:25px;
+    margin-top:25px;
+    padding-bottom:20px;
     opacity:0.8;
 }
 
@@ -205,6 +237,8 @@ h1{
 <body>
 
 <h1>☁️ AI Cloudburst Early Warning System</h1>
+
+<div id="alertBanner"></div>
 
 <div id="map"></div>
 
@@ -233,12 +267,15 @@ h1{
 </div>
 
 <div class="footer">
-    Real-Time Hyperlocal Disaster Monitoring System
+Real-Time Hyperlocal Disaster Monitoring System
 </div>
 
 <script>
 
-var map = L.map('map').setView([30.7046, 76.7179], 12);
+var map = L.map('map').setView(
+    [30.7046, 76.7179],
+    12
+);
 
 L.tileLayer(
 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
@@ -247,14 +284,18 @@ L.tileLayer(
 }
 ).addTo(map);
 
-var marker = L.marker([30.7046, 76.7179]).addTo(map);
+var marker = L.marker(
+    [30.7046, 76.7179]
+).addTo(map);
 
 async function fetchData(){
 
     let response = await fetch('/getdata');
+
     let data = await response.json();
 
-    document.getElementById("rainfall").innerHTML = data.rainfall;
+    document.getElementById("rainfall").innerHTML =
+    data.rainfall;
 
     document.getElementById("risk").innerHTML =
     data.risk + "%";
@@ -265,9 +306,7 @@ async function fetchData(){
     document.getElementById("time").innerHTML =
     data.time;
 
-    // -----------------------------
-    // STATUS COLOR
-    // -----------------------------
+    // STATUS COLORS
 
     let statusElement =
     document.getElementById("status");
@@ -292,18 +331,43 @@ async function fetchData(){
         statusElement.style.color = "#ff3b3b";
     }
 
-    // -----------------------------
+    // ALERT BANNER
+
+    let banner =
+    document.getElementById("alertBanner");
+
+    if(data.risk >= 95){
+
+        banner.style.display = "block";
+
+        banner.style.background =
+        "linear-gradient(90deg,#ff0000,#b30000)";
+
+        banner.innerHTML =
+        "🚨 EXTREME DANGER ALERT 🚨";
+    }
+
+    else{
+
+        banner.style.display = "none";
+    }
+
     // MAP UPDATE
-    // -----------------------------
 
-    marker.setLatLng([data.lat, data.lon]);
+    marker.setLatLng([
+        data.lat,
+        data.lon
+    ]);
 
-    map.setView([data.lat, data.lon], 12);
+    map.setView([
+        data.lat,
+        data.lon
+    ],12);
 }
 
 fetchData();
 
-setInterval(fetchData, 3000);
+setInterval(fetchData,3000);
 
 </script>
 
@@ -313,7 +377,6 @@ setInterval(fetchData, 3000);
 """
 
     return render_template_string(html)
-
 
 # -----------------------------
 # RUN APP
