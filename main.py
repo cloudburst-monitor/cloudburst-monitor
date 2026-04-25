@@ -1,148 +1,442 @@
-from flask import Flask, jsonify, send_from_directory
-import serial
-import threading
-import time
-import os
+<!-- =========================
+dashboard.html
+========================= -->
 
-app = Flask(__name__)
+<!DOCTYPE html>
+<html lang="en">
 
-# ESP32 CONNECT
-arduino = None
+<head>
 
-try:
+<meta charset="UTF-8">
 
-    arduino = serial.Serial(
-        'COM6',
-        115200,
-        timeout=1
-    )
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
 
-    time.sleep(2)
+<title>Cloudburst Monitoring System</title>
 
-    print("ESP32 Connected")
+<link rel="stylesheet"
+href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 
-except Exception as e:
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
-    print("Running without ESP32")
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+
+body{
+
+    margin:0;
+    font-family:'Segoe UI',sans-serif;
+    background:#071421;
+    color:white;
+}
+
+.header{
+
+    text-align:center;
+    padding:18px;
+    font-size:28px;
+    font-weight:bold;
+    background:#10263d;
+}
+
+.alert-bar{
+
+    display:none;
+    background:red;
+    text-align:center;
+    padding:12px;
+    font-weight:bold;
+}
+
+#map{
+
+    height:350px;
+    width:95%;
+    margin:15px auto;
+    border-radius:12px;
+}
+
+.location{
+
+    text-align:center;
+    color:#bbbbbb;
+}
+
+.cards{
+
+    display:flex;
+    justify-content:space-between;
+    gap:15px;
+    margin:20px;
+    flex-wrap:wrap;
+}
+
+.card{
+
+    flex:1;
+    min-width:180px;
+
+    background:#112b45;
+
+    padding:18px;
+
+    border-radius:12px;
+
+    text-align:center;
+}
+
+.card p{
+
+    font-size:26px;
+    font-weight:bold;
+}
+
+.normal{
+
+    color:#00ff88;
+}
+
+.risk{
+
+    color:orange;
+}
+
+.high{
+
+    color:red;
+}
+
+.alerts{
+
+    margin:20px;
+}
+
+.alert-item{
+
+    background:#132f4c;
+    padding:12px;
+    border-radius:10px;
+    margin-bottom:10px;
+
+    display:flex;
+    justify-content:space-between;
+}
+
+canvas{
+
+    background:#112b45;
+    border-radius:12px;
+    padding:10px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="header">
+
+☁ AI Cloudburst Monitoring Dashboard
+
+</div>
+
+<div class="alert-bar" id="alertBar">
+
+⚠ HIGH RISK ALERT ⚠
+
+</div>
+
+<div id="map"></div>
+
+<div class="location" id="locationText">
+
+Detecting location...
+
+</div>
+
+<div class="cards">
+
+    <div class="card">
+
+        Rainfall
+
+        <p id="rain">0</p>
+
+    </div>
+
+    <div class="card">
+
+        AI Risk %
+
+        <p id="risk">0%</p>
+
+    </div>
+
+    <div class="card">
+
+        Status
+
+        <p id="status">Normal</p>
+
+    </div>
+
+    <div class="card">
+
+        Time
+
+        <p id="time">--</p>
+
+    </div>
+
+</div>
+
+<div style="width:90%; margin:auto;">
+
+    <canvas id="rainChart"></canvas>
+
+</div>
+
+<div class="alerts">
+
+    <h2>⚠ Active Alerts</h2>
+
+    <div id="alertList"></div>
+
+</div>
+
+<script>
 
 
-# GLOBAL VALUES
-last_rain_value = 0
-last_risk = "Normal"
-last_score = 0
+
+// =========================
+// MAP
+// =========================
+
+let map = L.map('map').setView(
+    [30.7333,76.7794],
+    13
+);
+
+L.tileLayer(
+
+'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+
+).addTo(map);
+
+let userMarker = L.marker(
+    [30.7333,76.7794]
+).addTo(map);
+
+navigator.geolocation.getCurrentPosition(
+
+async(pos)=>{
+
+    let lat = pos.coords.latitude;
+    let lon = pos.coords.longitude;
+
+    map.setView([lat,lon],13);
+
+    userMarker.setLatLng([lat,lon]);
+
+    let res = await fetch(
+
+`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`
+
+    );
+
+    let data = await res.json();
+
+    document.getElementById(
+        "locationText"
+    ).innerText = data.display_name;
+});
 
 
-# BACKGROUND SENSOR READER
-def sensor_loop():
 
-    global last_rain_value
-    global last_risk
-    global last_score
+// =========================
+// CHART
+// =========================
 
-    while True:
+let rainData = [];
+let labels = [];
 
-        if arduino:
+const ctx = document
+.getElementById("rainChart")
+.getContext("2d");
 
-            try:
+const rainChart = new Chart(ctx, {
 
-                if arduino.in_waiting > 0:
+    type:"line",
 
-                    value = arduino.readline().decode(
-                        errors='ignore'
-                    ).strip()
+    data:{
 
-                    if value.isdigit():
+        labels:labels,
 
-                        rain_raw = int(value)
+        datasets:[{
 
-                        # SENSOR CALIBRATION
-                        rainfall = max(
-                            0,
-                            rain_raw * 0.03
-                        )
+            label:"Rainfall Trend",
 
-                        # Ignore tiny/noise readings
-                        if rainfall > 5:
+            data:rainData,
 
-                            # SMOOTH GRAPH VALUES
-                            last_rain_value = round(
-                                (last_rain_value * 0.2) +
-                                (rainfall * 0.8),
-                                2
-                            )
+            borderColor:"cyan",
 
-                            # PERCENTAGE SCALING
-                            rain_percent = min(
-                                100,
-                                (last_rain_value / 120) * 100
-                            )
+            backgroundColor:
+            "rgba(0,255,255,0.1)",
 
-                            last_score = round(
-                                rain_percent,
-                                2
-                            )
+            fill:true,
 
-                            # RISK LOGIC
-                            if rain_percent <= 30:
+            tension:0.4
+        }]
+    },
 
-                                last_risk = "Normal"
+    options:{
 
-                            elif rain_percent <= 70:
+        responsive:true,
 
-                                last_risk = "Average"
+        plugins:{
 
-                            elif rain_percent < 85:
+            legend:{
 
-                                last_risk = "Risk"
+                labels:{
+                    color:"white"
+                }
+            }
+        },
 
-                            else:
+        scales:{
 
-                                last_risk = "High Risk"
+            x:{
+                ticks:{
+                    color:"white"
+                }
+            },
 
-            except Exception:
+            y:{
+                ticks:{
+                    color:"white"
+                },
 
-                pass
-
-        # FAST RESPONSE
-        time.sleep(0.05)
+                beginAtZero:true
+            }
+        }
+    }
+});
 
 
-# START SENSOR THREAD
-threading.Thread(
-    target=sensor_loop,
-    daemon=True
-).start()
 
+// =========================
+// FETCH API DATA
+// =========================
 
-# HOME ROUTE
-@app.route("/")
-def home():
+async function fetchData(){
 
-    return send_from_directory(
-        ".",
-        "dashboard.html"
-    )
+    try{
 
+        const response = await fetch("/data");
 
-# API ROUTE
-@app.route("/data")
-def data():
+        const data = await response.json();
 
-    return jsonify({
+        document.getElementById(
+            "rain"
+        ).innerText = data.rainfall;
 
-        "rainfall": last_rain_value,
+        document.getElementById(
+            "risk"
+        ).innerText = data.score + "%";
 
-        "score": last_score,
+        document.getElementById(
+            "time"
+        ).innerText = data.timestamp;
 
-        "risk": last_risk
+        let status =
+        document.getElementById("status");
 
-    })
+        status.innerText = data.risk;
 
+        status.className = "";
 
-# RUN SERVER
-if __name__ == "__main__":
+        if(data.risk === "Normal"){
 
-    app.run(
-        host="0.0.0.0",
-        port=int(os.environ.get("PORT", 10000))
-    )
+            status.classList.add("normal");
+
+            document.getElementById(
+                "alertBar"
+            ).style.display = "none";
+        }
+
+        else if(data.risk === "Risk"){
+
+            status.classList.add("risk");
+
+            document.getElementById(
+                "alertBar"
+            ).style.display = "none";
+        }
+
+        else{
+
+            status.classList.add("high");
+
+            document.getElementById(
+                "alertBar"
+            ).style.display = "block";
+        }
+
+        // UPDATE GRAPH
+
+        rainData.push(data.rainfall);
+
+        labels.push(data.timestamp);
+
+        if(rainData.length > 15){
+
+            rainData.shift();
+            labels.shift();
+        }
+
+        rainChart.data.labels = labels;
+
+        rainChart.data.datasets[0].data =
+        rainData;
+
+        rainChart.update();
+
+        // ALERTS
+
+        let html = `
+
+        <div class="alert-item">
+
+            <span>📍 Local Sensor Node</span>
+
+            <span>${data.risk}</span>
+
+            <span>${data.timestamp}</span>
+
+        </div>
+
+        `;
+
+        document.getElementById(
+            "alertList"
+        ).innerHTML = html;
+
+    }
+
+    catch(error){
+
+        console.log(error);
+    }
+}
+
+// AUTO UPDATE
+
+setInterval(fetchData,1000);
+
+fetchData();
+
+</script>
+
+</body>
+</html>
