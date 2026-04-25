@@ -1,98 +1,292 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
-
-<title>AI Cloudburst EWS</title>
 
 <meta charset="UTF-8">
 
 <meta name="viewport"
 content="width=device-width, initial-scale=1.0">
 
+<title>AI Cloudburst Early Warning System</title>
+
 <link rel="stylesheet"
 href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+rel="stylesheet">
+
 <style>
 
-body{
+*{
     margin:0;
-    font-family:'Segoe UI',sans-serif;
-    background:linear-gradient(to bottom,#031525,#0a2744);
-    color:white;
-    text-align:center;
+    padding:0;
+    box-sizing:border-box;
 }
 
-h1{
-    padding:20px;
-    font-size:38px;
+body{
+
+    font-family:'Poppins',sans-serif;
+
+    background:
+    linear-gradient(
+    180deg,
+    #02111f,
+    #062540,
+    #041a2d
+    );
+
+    color:white;
+
+    overflow-x:hidden;
 }
+
+/* -----------------------------
+HEADER
+----------------------------- */
+
+.header{
+
+    width:100%;
+
+    padding:25px;
+
+    text-align:center;
+
+    backdrop-filter:blur(10px);
+
+    background:
+    rgba(255,255,255,0.03);
+
+    border-bottom:
+    1px solid rgba(255,255,255,0.08);
+}
+
+.header h1{
+
+    font-size:42px;
+
+    font-weight:700;
+
+    letter-spacing:1px;
+}
+
+.header p{
+
+    margin-top:8px;
+
+    opacity:0.8;
+
+    font-size:16px;
+}
+
+/* -----------------------------
+ALERT BANNER
+----------------------------- */
 
 #alertBanner{
+
     width:92%;
-    margin:auto;
-    margin-bottom:15px;
-    padding:14px;
-    border-radius:14px;
-    font-size:26px;
-    font-weight:bold;
+
+    margin:20px auto;
+
+    padding:18px;
+
+    border-radius:18px;
+
+    font-size:28px;
+
+    font-weight:700;
+
     display:none;
-    animation: blink 1s infinite;
+
+    animation:blink 1s infinite;
+
+    box-shadow:0 0 25px red;
 }
 
 @keyframes blink{
+
     50%{
         opacity:0.5;
     }
 }
 
-#map{
-    height:400px;
-    width:92%;
-    margin:auto;
-    border-radius:18px;
-    overflow:hidden;
-    box-shadow:0 0 25px rgba(0,0,0,0.5);
-}
+/* -----------------------------
+MAP
+----------------------------- */
 
-.cards{
-    display:flex;
-    justify-content:center;
-    flex-wrap:wrap;
+.map-container{
+
+    width:92%;
+
+    margin:auto;
+
     margin-top:20px;
 }
 
+#map{
+
+    height:450px;
+
+    border-radius:24px;
+
+    overflow:hidden;
+
+    box-shadow:
+    0 10px 35px rgba(0,0,0,0.5);
+}
+
+/* -----------------------------
+CARDS
+----------------------------- */
+
+.cards{
+
+    width:92%;
+
+    margin:auto;
+
+    margin-top:30px;
+
+    display:grid;
+
+    grid-template-columns:
+    repeat(auto-fit,minmax(220px,1fr));
+
+    gap:20px;
+}
+
 .card{
-    background:linear-gradient(145deg,#0b2d4d,#123d63);
-    width:180px;
-    margin:12px;
-    padding:20px;
-    border-radius:18px;
-    box-shadow:0 8px 25px rgba(0,0,0,0.4);
-    transition:0.3s;
+
+    position:relative;
+
+    overflow:hidden;
+
+    padding:28px;
+
+    border-radius:24px;
+
+    background:
+    rgba(255,255,255,0.05);
+
+    backdrop-filter:blur(12px);
+
+    border:
+    1px solid rgba(255,255,255,0.08);
+
+    transition:0.35s;
 }
 
 .card:hover{
-    transform:translateY(-5px);
+
+    transform:
+    translateY(-8px);
+
+    box-shadow:
+    0 10px 30px rgba(0,0,0,0.45);
+}
+
+.card::before{
+
+    content:"";
+
+    position:absolute;
+
+    width:140px;
+    height:140px;
+
+    background:
+    rgba(255,255,255,0.06);
+
+    border-radius:50%;
+
+    top:-50px;
+    right:-40px;
 }
 
 .card h2{
-    font-size:22px;
-    margin:0;
+
+    font-size:20px;
+
+    font-weight:500;
+
+    opacity:0.9;
 }
 
 .value{
-    font-size:30px;
-    font-weight:bold;
+
     margin-top:18px;
+
+    font-size:38px;
+
+    font-weight:700;
 }
 
+/* -----------------------------
+STATUS COLORS
+----------------------------- */
+
+.normal{
+    color:#00ff88;
+}
+
+.average{
+    color:#ffd000;
+}
+
+.high{
+    color:#ff8800;
+}
+
+.extreme{
+    color:#ff3b3b;
+}
+
+/* -----------------------------
+FOOTER
+----------------------------- */
+
 .footer{
-    margin-top:25px;
-    padding-bottom:20px;
-    opacity:0.8;
+
+    margin-top:35px;
+
+    padding:25px;
+
+    text-align:center;
+
+    opacity:0.7;
+
+    font-size:15px;
+}
+
+/* -----------------------------
+RESPONSIVE
+----------------------------- */
+
+@media(max-width:768px){
+
+    .header h1{
+
+        font-size:30px;
+    }
+
+    #map{
+
+        height:350px;
+    }
+
+    .value{
+
+        font-size:30px;
+    }
+
+    #alertBanner{
+
+        font-size:22px;
+    }
 }
 
 </style>
@@ -101,48 +295,114 @@ h1{
 
 <body>
 
-<h1>☁️ AI Cloudburst Early Warning System</h1>
+<!-- -----------------------------
+HEADER
+------------------------------ -->
+
+<div class="header">
+
+    <h1>☁️ AI Cloudburst Early Warning System</h1>
+
+    <p>
+    Real-Time Hyperlocal Disaster Monitoring Dashboard
+    </p>
+
+</div>
+
+<!-- -----------------------------
+ALERT BANNER
+------------------------------ -->
 
 <div id="alertBanner"></div>
 
-<div id="map"></div>
+<!-- -----------------------------
+MAP
+------------------------------ -->
+
+<div class="map-container">
+
+    <div id="map"></div>
+
+</div>
+
+<!-- -----------------------------
+CARDS
+------------------------------ -->
 
 <div class="cards">
 
     <div class="card">
+
         <h2>🌧 Rainfall</h2>
-        <div class="value" id="rainfall">0</div>
+
+        <div class="value"
+        id="rainfall">
+
+        0
+
+        </div>
+
     </div>
 
     <div class="card">
+
         <h2>🧠 AI Risk</h2>
-        <div class="value" id="risk">0%</div>
+
+        <div class="value"
+        id="risk">
+
+        0%
+
+        </div>
+
     </div>
 
     <div class="card">
+
         <h2>⚠ Status</h2>
-        <div class="value" id="status">Normal</div>
+
+        <div class="value"
+        id="status">
+
+        Normal
+
+        </div>
+
     </div>
 
     <div class="card">
+
         <h2>🕒 Time</h2>
-        <div class="value" id="time">--:--</div>
+
+        <div class="value"
+        id="time">
+
+        --:--
+
+        </div>
+
     </div>
 
 </div>
 
+<!-- -----------------------------
+FOOTER
+------------------------------ -->
+
 <div class="footer">
-Real-Time Hyperlocal Disaster Monitoring System
+
+AI-Powered Hyperlocal Climate Intelligence Platform
+
 </div>
 
 <script>
 
-// -----------------------------
-// MAP
-// -----------------------------
+/* -----------------------------
+MAP
+----------------------------- */
 
 var map = L.map('map').setView(
-    [30.7046, 76.7179],
+    [30.7046,76.7179],
     12
 );
 
@@ -154,68 +414,86 @@ L.tileLayer(
 ).addTo(map);
 
 var marker = L.marker(
-    [30.7046, 76.7179]
+    [30.7046,76.7179]
 ).addTo(map);
 
-// -----------------------------
-// FETCH DATA
-// -----------------------------
+/* -----------------------------
+FETCH DATA
+----------------------------- */
 
 async function fetchData(){
 
-    let response = await fetch('/getdata');
+    let response =
+    await fetch('/getdata');
 
-    let data = await response.json();
+    let data =
+    await response.json();
 
-    document.getElementById("rainfall").innerHTML =
+    document.getElementById(
+    "rainfall").innerHTML =
     data.rainfall;
 
-    document.getElementById("risk").innerHTML =
+    document.getElementById(
+    "risk").innerHTML =
     data.risk + "%";
 
-    document.getElementById("status").innerHTML =
+    document.getElementById(
+    "status").innerHTML =
     data.status;
 
-    document.getElementById("time").innerHTML =
+    document.getElementById(
+    "time").innerHTML =
     data.time;
 
-    // -----------------------------
-    // STATUS COLORS
-    // -----------------------------
+    /* -----------------------------
+    STATUS COLORS
+    ----------------------------- */
 
     let statusElement =
     document.getElementById("status");
 
-    if(data.status == "Normal Risk"){
+    statusElement.className =
+    "value";
 
-        statusElement.style.color = "#00ff88";
+    if(data.status ==
+    "Normal Risk"){
+
+        statusElement.classList
+        .add("normal");
     }
 
-    else if(data.status == "Average Risk"){
+    else if(data.status ==
+    "Average Risk"){
 
-        statusElement.style.color = "#ffd000";
+        statusElement.classList
+        .add("average");
     }
 
-    else if(data.status == "High Risk"){
+    else if(data.status ==
+    "High Risk"){
 
-        statusElement.style.color = "#ff8800";
+        statusElement.classList
+        .add("high");
     }
 
     else{
 
-        statusElement.style.color = "#ff3b3b";
+        statusElement.classList
+        .add("extreme");
     }
 
-    // -----------------------------
-    // ALERT BANNER
-    // -----------------------------
+    /* -----------------------------
+    ALERT BANNER
+    ----------------------------- */
 
     let banner =
-    document.getElementById("alertBanner");
+    document.getElementById(
+    "alertBanner");
 
     if(data.risk >= 95){
 
-        banner.style.display = "block";
+        banner.style.display =
+        "block";
 
         banner.style.background =
         "linear-gradient(90deg,#ff0000,#b30000)";
@@ -226,12 +504,13 @@ async function fetchData(){
 
     else{
 
-        banner.style.display = "none";
+        banner.style.display =
+        "none";
     }
 
-    // -----------------------------
-    // MAP UPDATE
-    // -----------------------------
+    /* -----------------------------
+    MAP UPDATE
+    ----------------------------- */
 
     marker.setLatLng([
         data.lat,
