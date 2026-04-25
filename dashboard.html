@@ -15,6 +15,8 @@ href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
 rel="stylesheet">
 
@@ -35,7 +37,7 @@ body{
     180deg,
     #02111f,
     #062540,
-    #041a2d
+    #031321
     );
 
     color:white;
@@ -43,22 +45,20 @@ body{
     overflow-x:hidden;
 }
 
-/* -----------------------------
-HEADER
------------------------------ */
+/* ---------------- HEADER ---------------- */
 
 .header{
 
     width:100%;
 
-    padding:25px;
+    padding:16px;
 
     text-align:center;
 
-    backdrop-filter:blur(10px);
-
     background:
     rgba(255,255,255,0.03);
+
+    backdrop-filter:blur(12px);
 
     border-bottom:
     1px solid rgba(255,255,255,0.08);
@@ -66,37 +66,33 @@ HEADER
 
 .header h1{
 
-    font-size:42px;
+    font-size:40px;
 
     font-weight:700;
-
-    letter-spacing:1px;
 }
 
 .header p{
 
-    margin-top:8px;
+    margin-top:5px;
 
     opacity:0.8;
-
-    font-size:16px;
 }
 
-/* -----------------------------
-ALERT BANNER
------------------------------ */
+/* ---------------- ALERT ---------------- */
 
 #alertBanner{
 
     width:92%;
 
-    margin:20px auto;
+    margin:12px auto;
 
-    padding:18px;
+    padding:12px;
 
-    border-radius:18px;
+    border-radius:14px;
 
-    font-size:28px;
+    text-align:center;
+
+    font-size:22px;
 
     font-weight:700;
 
@@ -104,7 +100,8 @@ ALERT BANNER
 
     animation:blink 1s infinite;
 
-    box-shadow:0 0 25px red;
+    box-shadow:
+    0 0 20px red;
 }
 
 @keyframes blink{
@@ -114,68 +111,62 @@ ALERT BANNER
     }
 }
 
-/* -----------------------------
-MAP
------------------------------ */
+/* ---------------- MAIN ---------------- */
 
-.map-container{
+.main-container{
 
     width:92%;
 
     margin:auto;
 
-    margin-top:20px;
+    margin-top:12px;
 }
+
+/* ---------------- MAP ---------------- */
 
 #map{
 
-    height:450px;
+    height:250px;
 
-    border-radius:24px;
+    border-radius:22px;
 
     overflow:hidden;
 
     box-shadow:
-    0 10px 35px rgba(0,0,0,0.5);
+    0 8px 30px rgba(0,0,0,0.45);
 }
 
-/* -----------------------------
-CARDS
------------------------------ */
+/* ---------------- CARDS ---------------- */
 
 .cards{
 
-    width:92%;
-
-    margin:auto;
-
-    margin-top:30px;
+    margin-top:16px;
 
     display:grid;
 
     grid-template-columns:
-    repeat(auto-fit,minmax(220px,1fr));
+    repeat(4,1fr);
 
-    gap:20px;
+    gap:16px;
 }
 
 .card{
 
-    position:relative;
-
-    overflow:hidden;
-
-    padding:28px;
-
-    border-radius:24px;
-
     background:
     rgba(255,255,255,0.05);
 
-    backdrop-filter:blur(12px);
-
     border:
     1px solid rgba(255,255,255,0.08);
+
+    border-radius:22px;
+
+    padding:20px;
+
+    backdrop-filter:blur(14px);
+
+    position:relative;
+
+    overflow:hidden;
 
     transition:0.35s;
 }
@@ -183,10 +174,10 @@ CARDS
 .card:hover{
 
     transform:
-    translateY(-8px);
+    translateY(-5px);
 
     box-shadow:
-    0 10px 30px rgba(0,0,0,0.45);
+    0 10px 25px rgba(0,0,0,0.35);
 }
 
 .card::before{
@@ -195,39 +186,33 @@ CARDS
 
     position:absolute;
 
-    width:140px;
-    height:140px;
-
-    background:
-    rgba(255,255,255,0.06);
+    width:120px;
+    height:120px;
 
     border-radius:50%;
 
-    top:-50px;
+    background:
+    rgba(255,255,255,0.04);
+
+    top:-40px;
     right:-40px;
 }
 
 .card h2{
 
-    font-size:20px;
+    font-size:19px;
 
-    font-weight:500;
-
-    opacity:0.9;
+    margin-bottom:12px;
 }
 
 .value{
-
-    margin-top:18px;
 
     font-size:38px;
 
     font-weight:700;
 }
 
-/* -----------------------------
-STATUS COLORS
------------------------------ */
+/* ---------------- STATUS COLORS ---------------- */
 
 .normal{
     color:#00ff88;
@@ -238,54 +223,146 @@ STATUS COLORS
 }
 
 .high{
-    color:#ff8800;
+    color:#ff9900;
 }
 
 .extreme{
     color:#ff3b3b;
 }
 
-/* -----------------------------
-FOOTER
------------------------------ */
+/* ---------------- BOTTOM SECTION ---------------- */
+
+.bottom-section{
+
+    margin-top:18px;
+
+    display:grid;
+
+    grid-template-columns:
+    2fr 1fr;
+
+    gap:16px;
+}
+
+/* ---------------- GRAPH ---------------- */
+
+.graph-card{
+
+    background:
+    rgba(255,255,255,0.05);
+
+    border:
+    1px solid rgba(255,255,255,0.08);
+
+    border-radius:22px;
+
+    padding:20px;
+
+    backdrop-filter:blur(14px);
+}
+
+.graph-card h2{
+
+    margin-bottom:15px;
+}
+
+/* ---------------- ALERTS ---------------- */
+
+.alert-card{
+
+    background:
+    rgba(255,255,255,0.05);
+
+    border:
+    1px solid rgba(255,255,255,0.08);
+
+    border-radius:22px;
+
+    padding:20px;
+
+    backdrop-filter:blur(14px);
+}
+
+.alert-card h2{
+
+    margin-bottom:14px;
+}
+
+.alert-item{
+
+    padding:12px;
+
+    margin-bottom:12px;
+
+    border-radius:12px;
+
+    background:
+    rgba(255,255,255,0.05);
+
+    font-size:14px;
+}
+
+.active{
+    border-left:5px solid #00ff88;
+}
+
+.warning{
+    border-left:5px solid #ff9900;
+}
+
+.danger{
+    border-left:5px solid #ff3b3b;
+}
+
+/* ---------------- FOOTER ---------------- */
 
 .footer{
 
-    margin-top:35px;
-
-    padding:25px;
+    margin-top:20px;
 
     text-align:center;
 
-    opacity:0.7;
+    padding-bottom:20px;
 
-    font-size:15px;
+    opacity:0.7;
 }
 
-/* -----------------------------
-RESPONSIVE
------------------------------ */
+/* ---------------- RESPONSIVE ---------------- */
 
-@media(max-width:768px){
+@media(max-width:1000px){
+
+    .cards{
+
+        grid-template-columns:
+        repeat(2,1fr);
+    }
+
+    .bottom-section{
+
+        grid-template-columns:1fr;
+    }
+}
+
+@media(max-width:700px){
+
+    .cards{
+
+        grid-template-columns:1fr;
+    }
 
     .header h1{
 
-        font-size:30px;
+        font-size:28px;
     }
 
     #map{
 
-        height:350px;
+        height:220px;
     }
 
     .value{
 
         font-size:30px;
-    }
-
-    #alertBanner{
-
-        font-size:22px;
     }
 }
 
@@ -295,9 +372,7 @@ RESPONSIVE
 
 <body>
 
-<!-- -----------------------------
-HEADER
------------------------------- -->
+<!-- HEADER -->
 
 <div class="header">
 
@@ -309,85 +384,119 @@ HEADER
 
 </div>
 
-<!-- -----------------------------
-ALERT BANNER
------------------------------- -->
+<!-- ALERT BANNER -->
 
 <div id="alertBanner"></div>
 
-<!-- -----------------------------
-MAP
------------------------------- -->
+<!-- MAIN -->
 
-<div class="map-container">
+<div class="main-container">
+
+    <!-- MAP -->
 
     <div id="map"></div>
 
+    <!-- CARDS -->
+
+    <div class="cards">
+
+        <div class="card">
+
+            <h2>🌧 Rainfall</h2>
+
+            <div class="value"
+            id="rainfall">
+
+            0
+
+            </div>
+
+        </div>
+
+        <div class="card">
+
+            <h2>🧠 AI Risk</h2>
+
+            <div class="value"
+            id="risk">
+
+            0%
+
+            </div>
+
+        </div>
+
+        <div class="card">
+
+            <h2>⚠ Status</h2>
+
+            <div class="value"
+            id="status">
+
+            Normal
+
+            </div>
+
+        </div>
+
+        <div class="card">
+
+            <h2>🕒 Time</h2>
+
+            <div class="value"
+            id="time">
+
+            --:--
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- BOTTOM -->
+
+    <div class="bottom-section">
+
+        <!-- GRAPH -->
+
+        <div class="graph-card">
+
+            <h2>📈 Rainfall Trend</h2>
+
+            <canvas id="rainChart"></canvas>
+
+        </div>
+
+        <!-- ACTIVE ALERTS -->
+
+        <div class="alert-card">
+
+            <h2>🚨 Active Node Alerts</h2>
+
+            <div class="alert-item active">
+                Node A1 • Sensor Active
+            </div>
+
+            <div class="alert-item warning">
+                Node B4 • Heavy Rainfall Detected
+            </div>
+
+            <div class="alert-item danger">
+                Node C2 • Flood Risk Increasing
+            </div>
+
+            <div class="alert-item active">
+                Node D7 • Monitoring Online
+            </div>
+
+        </div>
+
+    </div>
+
 </div>
 
-<!-- -----------------------------
-CARDS
------------------------------- -->
-
-<div class="cards">
-
-    <div class="card">
-
-        <h2>🌧 Rainfall</h2>
-
-        <div class="value"
-        id="rainfall">
-
-        0
-
-        </div>
-
-    </div>
-
-    <div class="card">
-
-        <h2>🧠 AI Risk</h2>
-
-        <div class="value"
-        id="risk">
-
-        0%
-
-        </div>
-
-    </div>
-
-    <div class="card">
-
-        <h2>⚠ Status</h2>
-
-        <div class="value"
-        id="status">
-
-        Normal
-
-        </div>
-
-    </div>
-
-    <div class="card">
-
-        <h2>🕒 Time</h2>
-
-        <div class="value"
-        id="time">
-
-        --:--
-
-        </div>
-
-    </div>
-
-</div>
-
-<!-- -----------------------------
-FOOTER
------------------------------- -->
+<!-- FOOTER -->
 
 <div class="footer">
 
@@ -397,13 +506,11 @@ AI-Powered Hyperlocal Climate Intelligence Platform
 
 <script>
 
-/* -----------------------------
-MAP
------------------------------ */
+/* ---------------- MAP ---------------- */
 
 var map = L.map('map').setView(
     [30.7046,76.7179],
-    12
+    11
 );
 
 L.tileLayer(
@@ -417,9 +524,77 @@ var marker = L.marker(
     [30.7046,76.7179]
 ).addTo(map);
 
-/* -----------------------------
-FETCH DATA
------------------------------ */
+/* ---------------- CHART ---------------- */
+
+const ctx =
+document.getElementById(
+'rainChart'
+).getContext('2d');
+
+const rainChart =
+new Chart(ctx,{
+
+    type:'line',
+
+    data:{
+
+        labels:[
+        '10 AM',
+        '11 AM',
+        '12 PM',
+        '1 PM',
+        '2 PM',
+        '3 PM'
+        ],
+
+        datasets:[{
+
+            label:'Rainfall',
+
+            data:[5,15,22,38,50,70],
+
+            borderColor:'#00c3ff',
+
+            backgroundColor:
+            'rgba(0,195,255,0.2)',
+
+            fill:true,
+
+            tension:0.4
+        }]
+    },
+
+    options:{
+
+        responsive:true,
+
+        plugins:{
+
+            legend:{
+                labels:{
+                    color:'white'
+                }
+            }
+        },
+
+        scales:{
+
+            x:{
+                ticks:{
+                    color:'white'
+                }
+            },
+
+            y:{
+                ticks:{
+                    color:'white'
+                }
+            }
+        }
+    }
+});
+
+/* ---------------- FETCH DATA ---------------- */
 
 async function fetchData(){
 
@@ -445,12 +620,12 @@ async function fetchData(){
     "time").innerHTML =
     data.time;
 
-    /* -----------------------------
-    STATUS COLORS
-    ----------------------------- */
+    /* STATUS COLOR */
 
     let statusElement =
-    document.getElementById("status");
+    document.getElementById(
+    "status"
+    );
 
     statusElement.className =
     "value";
@@ -470,7 +645,7 @@ async function fetchData(){
     }
 
     else if(data.status ==
-    "High Risk"){
+    "high risk"){
 
         statusElement.classList
         .add("high");
@@ -482,13 +657,12 @@ async function fetchData(){
         .add("extreme");
     }
 
-    /* -----------------------------
-    ALERT BANNER
-    ----------------------------- */
+    /* EXTREME ALERT */
 
     let banner =
     document.getElementById(
-    "alertBanner");
+    "alertBanner"
+    );
 
     if(data.risk >= 95){
 
@@ -496,7 +670,7 @@ async function fetchData(){
         "block";
 
         banner.style.background =
-        "linear-gradient(90deg,#ff0000,#b30000)";
+        "linear-gradient(90deg,#ff0000,#a10000)";
 
         banner.innerHTML =
         "🚨 EXTREME DANGER ALERT 🚨";
@@ -508,19 +682,12 @@ async function fetchData(){
         "none";
     }
 
-    /* -----------------------------
-    MAP UPDATE
-    ----------------------------- */
+    /* MAP */
 
     marker.setLatLng([
         data.lat,
         data.lon
     ]);
-
-    map.setView([
-        data.lat,
-        data.lon
-    ],12);
 }
 
 fetchData();
