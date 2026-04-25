@@ -509,33 +509,57 @@ var marker = L.marker(
 [30.7046,76.7179]
 ).addTo(map);
 
-/* LIVE BROWSER LOCATION */
+/* LIVE LOCATION */
 
 navigator.geolocation.watchPosition(
 
-function(position){
+async function(position){
 
     let lat = position.coords.latitude;
     let lon = position.coords.longitude;
 
-    /* UPDATE MARKER */
+    /* UPDATE MAP */
 
     marker.setLatLng([lat, lon]);
 
-    /* MOVE MAP */
-
     map.setView([lat, lon], 12);
 
-    /* SHOW LIVE LOCATION */
+    /* GET PLACE NAME */
 
-    document.getElementById(
-    "liveLocation"
-    ).innerHTML =
+    try{
 
-    "📍 Lat: " +
-    lat.toFixed(4) +
-    " , Lon: " +
-    lon.toFixed(4);
+        let response = await fetch(
+
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`
+
+        );
+
+        let data = await response.json();
+
+        let place =
+
+        data.address.city ||
+        data.address.town ||
+        data.address.village ||
+        data.address.state_district ||
+        "Current Location";
+
+        document.getElementById(
+        "liveLocation"
+        ).innerHTML =
+
+        "📍 " + place;
+
+    }
+
+    catch{
+
+        document.getElementById(
+        "liveLocation"
+        ).innerHTML =
+
+        "📍 Live Location";
+    }
 
 },
 
@@ -686,7 +710,7 @@ async function fetchData(){
         .add("extreme");
     }
 
-    /* ALERT BANNER */
+    /* EXTREME ALERT */
 
     let banner =
     document.getElementById(
@@ -705,7 +729,7 @@ async function fetchData(){
         "none";
     }
 
-    /* GRAPH UPDATE */
+    /* GRAPH */
 
     rainfallHistory.push(
     data.rainfall
